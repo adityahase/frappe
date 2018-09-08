@@ -399,9 +399,12 @@ def run_tests(context, app=None, module=None, doctype=None, test=(),
 		cov = Coverage(include=source_path, omit=['*.html', '*.js', '*.css'])
 		cov.start()
 
-	ret = frappe.test_runner.main(app, module, doctype, context.verbose, tests=tests,
-		force=context.force, profile=profile, junit_xml_output=junit_xml_output,
-		ui_tests = ui_tests, doctype_list_path = doctype_list_path)
+	try:
+		ret = frappe.test_runner.main(app, module, doctype, context.verbose, tests=tests,
+			force=context.force, profile=profile, junit_xml_output=junit_xml_output,
+			ui_tests = ui_tests, doctype_list_path = doctype_list_path)
+	except:
+		pass
 
 	if coverage:
 		cov.stop()
