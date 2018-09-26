@@ -19,6 +19,9 @@ __title__ = "Frappe Framework"
 
 local = Local()
 
+def f():
+	pass
+
 class _dict(dict):
 	"""dict like object that exposes keys as attributes"""
 	def __getattr__(self, key):
