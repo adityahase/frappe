@@ -24,8 +24,10 @@ def print_has_permission_check_logs(func):
 	def inner(*args, **kwargs):
 		frappe.flags['has_permission_check_logs'] = []
 		result = func(*args, **kwargs)
+		self_perm_check = True if not kwargs.get('user') else kwargs.get('user') == frappe.session.user
 		# print only if access denied
-		if not result:
+		# and if user is checking his own permission
+		if not result and self_perm_check:
 			msgprint(('<br>').join(frappe.flags['has_permission_check_logs']))
 		frappe.flags.pop('has_permission_check_logs', None)
 		return result
@@ -187,7 +189,9 @@ def get_role_permissions(doctype_meta, user=None):
 				and ptype != 'create'):
 				perms['if_owner'][ptype] = 1
 				# has no access if not owner
-				perms[ptype] = 0
+				# only provide read access so that user is able to at-least access list
+				# (and the documents will be filtered based on owner sin further checks)
+				perms[ptype] = 1 if ptype == 'read' else 0
 
 		frappe.local.role_permissions[cache_key] = perms
 
