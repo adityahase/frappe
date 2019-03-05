@@ -1609,3 +1609,8 @@ def mock(type, size = 1, locale = 'en'):
 	results = squashify(results)
 
 	return results
+
+
+def query(doctype):
+	from .model.new_db_query import QueryMeta
+	return QueryMeta(doctype)
