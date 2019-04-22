@@ -24,6 +24,8 @@ def migrate(verbose=True, rebuild_website=False):
 	- sync desktop icons
 	- sync web pages (from /www)'''
 	frappe.flags.in_migrate = True
+	frappe.cache().delete_value('touched_tables')
+
 	clear_global_cache()
 
 	# run patches
