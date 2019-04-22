@@ -27,6 +27,8 @@ def migrate(verbose=True, rebuild_website=False):
 	- run after migrate hooks
 	'''
 	frappe.flags.in_migrate = True
+	frappe.cache().delete_value('touched_tables')
+
 	clear_global_cache()
 
 	#run before_migrate hooks
