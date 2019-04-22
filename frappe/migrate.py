@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import json
 import frappe
 import frappe.translate
 import frappe.modules.patch_handler
@@ -25,39 +26,49 @@ def migrate(verbose=True, rebuild_website=False):
 	- sync web pages (from /www)
 	- run after migrate hooks
 	'''
-	frappe.flags.in_migrate = True
-	clear_global_cache()
 
-	#run before_migrate hooks
-	for app in frappe.get_installed_apps():
-		for fn in frappe.get_hooks('before_migrate', app_name=app):
-			frappe.get_attr(fn)()
+	try:
+		frappe.flags.touched_tables = set()
+		frappe.flags.in_migrate = True
 
-	# run patches
-	frappe.modules.patch_handler.run_all()
-	# sync
-	frappe.model.sync.sync_all(verbose=verbose)
-	frappe.translate.clear_cache()
-	sync_fixtures()
-	sync_customizations()
-	sync_languages()
+		clear_global_cache()
 
-	frappe.get_doc('Portal Settings', 'Portal Settings').sync_menu()
+		#run before_migrate hooks
+		for app in frappe.get_installed_apps():
+			for fn in frappe.get_hooks('before_migrate', app_name=app):
+				frappe.get_attr(fn)()
 
-	# syncs statics
-	render.clear_cache()
+		# run patches
+		frappe.modules.patch_handler.run_all()
+		# sync
+		frappe.model.sync.sync_all(verbose=verbose)
+		frappe.translate.clear_cache()
+		sync_fixtures()
+		sync_customizations()
+		sync_languages()
 
-	# add static pages to global search
-	router.sync_global_search()
+		frappe.get_doc('Portal Settings', 'Portal Settings').sync_menu()
 
-	#run after_migrate hooks
-	for app in frappe.get_installed_apps():
-		for fn in frappe.get_hooks('after_migrate', app_name=app):
-			frappe.get_attr(fn)()
+		# syncs statics
+		render.clear_cache()
 
-	frappe.db.commit()
+		# add static pages to global search
+		router.sync_global_search()
 
-	clear_notifications()
+		#run after_migrate hooks
+		for app in frappe.get_installed_apps():
+			for fn in frappe.get_hooks('after_migrate', app_name=app):
+				frappe.get_attr(fn)()
 
-	frappe.publish_realtime("version-update")
-	frappe.flags.in_migrate = False
+		frappe.db.commit()
+
+		clear_notifications()
+
+		frappe.publish_realtime("version-update")
+		frappe.flags.in_migrate = False
+	finally:
+		touched_tables_file = frappe.get_site_path('touched_tables.json')
+		with open(touched_tables_file, 'w') as f:
+			json.dump(list(frappe.flags.touched_tables), f, sort_keys=True, indent=4)
+		frappe.flags.touched_tables.clear()
+
