@@ -22,12 +22,12 @@ install:
   - source ~/.nvm/nvm.sh
   - nvm install v8.10.0
 
-  - git clone https://github.com/frappe/bench --depth=1
+  - git clone https://github.com/adityahase/bench --depth=1 --branch=fix-print
   - pip install -e ./bench
 
 
   - rm $TRAVIS_BUILD_DIR/.git/shallow
-  - cd ~/ && bench init frappe-bench --python $(which python)  --verbose --frappe-path $TRAVIS_BUILD_DIR
+  - cd ~/ && bench init frappe-bench --python $(which python)  --verbose --skip-assets --frappe-path $TRAVIS_BUILD_DIR
   - cp -r $TRAVIS_BUILD_DIR/test_sites/test_site ~/frappe-bench/sites/
 
 before_script:
