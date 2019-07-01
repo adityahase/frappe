@@ -21,8 +21,6 @@ install:
   - source ~/.nvm/nvm.sh
   - nvm install v8.10.0
 
-  - pip install python-coveralls
-
   - wget https://raw.githubusercontent.com/frappe/bench/master/playbooks/install.py
 
   - sudo python install.py --develop --user travis --without-bench-setup
@@ -47,6 +45,3 @@ script:
   - bench --site test_site reinstall --yes
   - bench --site test_site scheduler disable
   - bench --site test_site run-tests --coverage
-
-after_script:
-  - coveralls -b apps/frappe -d ../../sites/.coverage
