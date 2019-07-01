@@ -25,18 +25,18 @@ install:
   - git clone https://github.com/frappe/bench --depth=1
   - pip install -e ./bench
 
+
   - rm $TRAVIS_BUILD_DIR/.git/shallow
   - cd ~/ && bench init frappe-bench --python $(which python) --frappe-path $TRAVIS_BUILD_DIR
   - cp -r $TRAVIS_BUILD_DIR/test_sites/test_site ~/frappe-bench/sites/
 
 before_script:
-  - cd ~/frappe-bench
-  - sed -i 's/9000/9001/g' sites/common_site_config.json
-  - bench start &
+  - cd ~/frappe-bench && bench start &
   - sleep 1
 
 script:
   - set -e
+  - mysql -u root -ptravis -e "UPDATE mysql.user SET Password=PASSWORD('travis') WHERE User='root'; FLUSH PRIVILEGES;""
   - mysql -u root -ptravis -e "create database test_frappe"
   - mysql -u root -ptravis -e "USE mysql; CREATE USER 'test_frappe'@'localhost' IDENTIFIED BY 'test_frappe'; FLUSH PRIVILEGES; "
   - mysql -u root -ptravis -e "USE mysql; GRANT ALL PRIVILEGES ON \`test_frappe\`.* TO 'test_frappe'@'localhost';"
