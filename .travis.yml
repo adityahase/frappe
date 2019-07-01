@@ -12,6 +12,9 @@ addons:
   hosts:
     - test_site
 
+git:
+  depth: 1
+
 install:
   - set -e
   - sudo rm /etc/apt/sources.list.d/mongodb*.list
