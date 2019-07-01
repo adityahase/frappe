@@ -21,7 +21,7 @@ install:
   - nvm install v8.10.0
 
   - git clone https://github.com/frappe/bench --depth=1
-  - sudo pip install -e ~/bench
+  - pip install --user -e ./bench
 
   - rm $TRAVIS_BUILD_DIR/.git/shallow
   - cd ~/ && bench init frappe-bench --python $(which python) --frappe-path $TRAVIS_BUILD_DIR
