@@ -31,8 +31,9 @@ install:
   - cp -r $TRAVIS_BUILD_DIR/test_sites/test_site ~/frappe-bench/sites/
 
 before_script:
-  - cd ~/frappe-bench && bench start
-  - sleep 1
+  - cd ~/frappe-bench
+  - bench start &
+  - sleep 10
 
 script:
   - mysql -u root -ptravis -e "UPDATE mysql.user SET Password=PASSWORD('travis') WHERE User='root'; FLUSH PRIVILEGES;""
