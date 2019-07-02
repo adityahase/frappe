@@ -18,7 +18,6 @@ git:
   depth: 1
 
 install:
-  - set -e
   - source ~/.nvm/nvm.sh
   - nvm install v8.10.0
 
