@@ -35,9 +35,9 @@ before_script:
   - sleep 10
 
 script:
-  - mysql -u root -ptravis -e "UPDATE mysql.user SET Password=PASSWORD('travis') WHERE User='root'; FLUSH PRIVILEGES;""
+  - mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD('travis') WHERE User='root'; FLUSH PRIVILEGES;"
   - mysql -u root -ptravis -e "create database test_frappe"
-  - mysql -u root -ptravis -e "USE mysql; CREATE USER 'test_frappe'@'localhost' IDENTIFIED BY 'test_frappe'; FLUSH PRIVILEGES; "
+  - mysql -u root -ptravis -e "USE mysql; CREATE USER 'test_frappe'@'localhost' IDENTIFIED BY 'test_frappe'; FLUSH PRIVILEGES;"
   - mysql -u root -ptravis -e "USE mysql; GRANT ALL PRIVILEGES ON \`test_frappe\`.* TO 'test_frappe'@'localhost';"
 
   - bench --site test_site reinstall --yes
