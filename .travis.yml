@@ -41,6 +41,6 @@ before_script:
   - sleep 10
 
 script:
-  - bench --site test_site --force reinstall --force --yes
+  - bench --site test_site --force reinstall --yes
   - bench --site test_site scheduler disable
   - bench --site test_site run-tests --coverage
