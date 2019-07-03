@@ -27,7 +27,7 @@ install:
 
   - rm $TRAVIS_BUILD_DIR/.git/shallow
   - ls /etc/mysql/conf.d/
-  - sudo sh -c 'cat $TRAVIS_BUILD_DIR/my.cnf >> /etc/mysql/conf.d/my.conf'
+  - sudo sh -c 'cat $TRAVIS_BUILD_DIR/my.cnf >> /etc/mysql/conf.d/mysql.conf'
   - sudo service mysql restart
   - cd ~/ && bench init frappe-bench --python $(which python)  --verbose --skip-assets --frappe-path $TRAVIS_BUILD_DIR
   - cp -r $TRAVIS_BUILD_DIR/test_sites/test_site ~/frappe-bench/sites/
