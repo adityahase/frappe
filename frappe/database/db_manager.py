@@ -85,5 +85,4 @@ class DbManager:
 			target=esc(target),
 			source=source
 		)
-		print(command)
 		os.system(command)
