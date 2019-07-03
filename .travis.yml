@@ -21,10 +21,16 @@ install:
   - source ~/.nvm/nvm.sh
   - nvm install v8.10.0
 
-  - wget https://raw.githubusercontent.com/frappe/bench/master/playbooks/install.py
-  - sudo -H python install.py --develop --user travis --without-bench-setup
   - git clone https://github.com/adityahase/bench --depth=1 --branch=fix-print my-bench
   - pip install -e ./my-bench
+
+  - mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD('travis') WHERE User='root'; FLUSH PRIVILEGES;"
+
+  - mysql -u root -ptravis  -e "SET GLOBAL character_set_server = 'utf8mb4'"
+  - mysql -u root -ptravis  -e "SET GLOBAL collation_server = 'utf8mb4_unicode_ci'"
+  - mysql -u root -ptravis  -e "SET GLOBAL innodb_file_format=Barracuda"
+  - mysql -u root -ptravis  -e "SET GLOBAL innodb_file_per_table=ON"
+  - mysql -u root -ptravis  -e "SET GLOBAL innodb_large_prefix=1"
 
   - mysql -u root -ptravis -e "create database test_frappe"
   - mysql -u root -ptravis -e "USE mysql; CREATE USER 'test_frappe'@'localhost' IDENTIFIED BY 'test_frappe'; FLUSH PRIVILEGES;"
