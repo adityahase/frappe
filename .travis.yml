@@ -25,8 +25,8 @@ install:
   - pip install -e ./bench
 
   - mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD('travis') WHERE User='root'; FLUSH PRIVILEGES;"
-  - mysql -u root -ptravis  -e "SET collation_server = 'utf8mb4_unicode_ci';"
-  - mysql -u root -ptravis  -e "SET character_set_server = 'utf8mb4';"
+  - mysql -u root -ptravis  -e "SET GLOBAL collation_server = 'utf8mb4_unicode_ci';"
+  - mysql -u root -ptravis  -e "SET GLOBAL character_set_server = 'utf8mb4';"
   - mysql -u root -ptravis -e "create database test_frappe"
   - mysql -u root -ptravis -e "USE mysql; CREATE USER 'test_frappe'@'localhost' IDENTIFIED BY 'test_frappe'; FLUSH PRIVILEGES;"
   - mysql -u root -ptravis -e "USE mysql; GRANT ALL PRIVILEGES ON \`test_frappe\`.* TO 'test_frappe'@'localhost';"
