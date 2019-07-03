@@ -22,7 +22,7 @@ install:
   - nvm install v8.10.0
 
   - wget https://raw.githubusercontent.com/frappe/bench/master/playbooks/install.py
-  - sudo python install.py --develop --user travis --without-bench-setup
+  - sudo -H python install.py --develop --user travis --without-bench-setup
   - git clone https://github.com/adityahase/bench --depth=1 --branch=fix-print my-bench
   - pip install -e ./my-bench
 
