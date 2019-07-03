@@ -24,10 +24,14 @@ install:
   - git clone https://github.com/adityahase/bench --depth=1 --branch=fix-print
   - pip install -e ./bench
 
+  - mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD('travis') WHERE User='root'; FLUSH PRIVILEGES;"
+  - mysql -u root -ptravis  -e "SET collation_server = 'utf8mb4_unicode_ci';"
+  - mysql -u root -ptravis  -e "SET character_set_server = 'utf8mb4';"
+  - mysql -u root -ptravis -e "create database test_frappe"
+  - mysql -u root -ptravis -e "USE mysql; CREATE USER 'test_frappe'@'localhost' IDENTIFIED BY 'test_frappe'; FLUSH PRIVILEGES;"
+  - mysql -u root -ptravis -e "USE mysql; GRANT ALL PRIVILEGES ON \`test_frappe\`.* TO 'test_frappe'@'localhost';"
 
   - rm $TRAVIS_BUILD_DIR/.git/shallow
-  - sudo sh -c 'cat $TRAVIS_BUILD_DIR/my.cnf >> /etc/mysql/my.conf'
-  - sudo service mysql restart
   - cd ~/ && bench init frappe-bench --python $(which python)  --verbose --skip-assets --frappe-path $TRAVIS_BUILD_DIR
   - cp -r $TRAVIS_BUILD_DIR/test_sites/test_site ~/frappe-bench/sites/
 
@@ -37,11 +41,6 @@ before_script:
   - sleep 10
 
 script:
-  - mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD('travis') WHERE User='root'; FLUSH PRIVILEGES;"
-  - mysql -u root -ptravis -e "create database test_frappe"
-  - mysql -u root -ptravis -e "USE mysql; CREATE USER 'test_frappe'@'localhost' IDENTIFIED BY 'test_frappe'; FLUSH PRIVILEGES;"
-  - mysql -u root -ptravis -e "USE mysql; GRANT ALL PRIVILEGES ON \`test_frappe\`.* TO 'test_frappe'@'localhost';"
-
   - bench --site test_site reinstall --yes
   - bench --site test_site scheduler disable
   - bench --site test_site run-tests --coverage
