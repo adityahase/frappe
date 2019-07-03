@@ -55,7 +55,7 @@ before_script:
   - sed -i 's/watch:/# watch:/g' Procfile
   - sed -i 's/schedule:/# schedule:/g' Procfile
   - bench start &
-  - sleep 10
+  - bench build --app frappe
 
 script:
   - bench --site test_site --force reinstall --yes
