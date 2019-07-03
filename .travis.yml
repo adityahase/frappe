@@ -31,6 +31,10 @@ install:
   - mysql -u root -ptravis -e "USE mysql; CREATE USER 'test_frappe'@'localhost' IDENTIFIED BY 'test_frappe'; FLUSH PRIVILEGES;"
   - mysql -u root -ptravis -e "USE mysql; GRANT ALL PRIVILEGES ON \`test_frappe\`.* TO 'test_frappe'@'localhost'; FLUSH PRIVILEGES;"
 
+  - mysql -u root -ptravis -e "SHOW VARIABLES LIKE '%server%'"
+  - mysql -u root -ptravis -e "SELECT user, host, password FROM mysql.user"
+  - mysql -u root -ptravis -e "SHOW DATABASES"
+
   - rm $TRAVIS_BUILD_DIR/.git/shallow
   - cd ~/ && bench init frappe-bench --python $(which python)  --verbose --skip-assets --frappe-path $TRAVIS_BUILD_DIR
   - cp -r $TRAVIS_BUILD_DIR/test_sites/test_site ~/frappe-bench/sites/
