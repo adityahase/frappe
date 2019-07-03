@@ -21,8 +21,10 @@ install:
   - source ~/.nvm/nvm.sh
   - nvm install v8.10.0
 
-  - git clone https://github.com/adityahase/bench --depth=1 --branch=fix-print
-  - pip install -e ./bench
+  - wget https://raw.githubusercontent.com/frappe/bench/master/playbooks/install.py
+  - sudo python install.py --develop --user travis --without-bench-setup
+  - git clone https://github.com/adityahase/bench --depth=1 --branch=fix-print my-bench
+  - pip install -e ./my-bench
 
   - mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD('travis') WHERE User='root'; FLUSH PRIVILEGES;"
   - mysql -u root -ptravis  -e "SET GLOBAL character_set_server = 'utf8mb4'"
