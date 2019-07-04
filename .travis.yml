@@ -48,16 +48,16 @@ install:
   - cd ~/ && bench init frappe-bench --python $(which python)  --verbose --skip-assets --frappe-path $TRAVIS_BUILD_DIR
   - cp -r $TRAVIS_BUILD_DIR/test_sites/test_site ~/frappe-bench/sites/
 
-before_script:
   - cd ~/frappe-bench
   - sed -i 's/redis_socketio:/# redis_socketio:/g' Procfile
   - sed -i 's/socketio:/# socketio:/g' Procfile
   - sed -i 's/watch:/# watch:/g' Procfile
   - sed -i 's/schedule:/# schedule:/g' Procfile
-  - bench start &
   - bench build --app frappe
 
-script:
+before_script:
+  - bench start &
   - bench --site test_site --force reinstall --yes
   - bench --site test_site scheduler disable
+script:
   - bench --site test_site run-tests --coverage
