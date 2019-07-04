@@ -136,15 +136,8 @@ def set_default(key, value, parent, parenttype="__default"):
 		_clear_cache(parent)
 
 def add_default(key, value, parent, parenttype=None):
-	d = frappe.get_doc({
-		"doctype": "DefaultValue",
-		"parent": parent,
-		"parenttype": parenttype or "__default",
-		"parentfield": "system_defaults",
-		"defkey": key,
-		"defvalue": value
-	})
-	d.insert(ignore_permissions=True)
+	d = frappe.db.sql("""INSERT INTO tabDefaultValue(name, parent, parenttype, parentfield, defkey, defvalue, modified, creation)
+		VALUES(%s, %s, %s, %s, %s, %s, %s, %s)""", (frappe.generate_hash(), parent, parenttype or "__default", "system_defaults", key, value, frappe.utils.now(), frappe.utils.now()))
 	_clear_cache(parent)
 
 def clear_default(key=None, value=None, parent=None, name=None, parenttype=None):
