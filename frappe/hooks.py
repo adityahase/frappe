@@ -121,8 +121,8 @@ doc_events = {
 			"frappe.desk.notifications.clear_doctype_notifications",
 			"frappe.core.doctype.activity_log.feed.update_feed",
 			"frappe.workflow.doctype.workflow_action.workflow_action.process_workflow_actions",
-			"frappe.automation.doctype.assignment_rule.assignment_rule.apply",
-			"frappe.automation.doctype.milestone_tracker.milestone_tracker.evaluate_milestone"
+			# "frappe.automation.doctype.assignment_rule.assignment_rule.apply",
+			# "frappe.automation.doctype.milestone_tracker.milestone_tracker.evaluate_milestone"
 		],
 		"after_rename": "frappe.desk.notifications.clear_doctype_notifications",
 		"on_cancel": [
@@ -134,7 +134,7 @@ doc_events = {
 			"frappe.workflow.doctype.workflow_action.workflow_action.process_workflow_actions"
 		],
 		"on_change": [
-			"frappe.social.doctype.energy_point_rule.energy_point_rule.process_energy_points"
+			# "frappe.social.doctype.energy_point_rule.energy_point_rule.process_energy_points"
 		],
 	},
 	"Email Group Member": {
