@@ -23,6 +23,11 @@ matrix:
     env: DB=mariadb TYPE=server
     script: bench --site test_site run-tests --coverage
 
+  - name: "PyPy 3.5 MariaDB"
+    python: "pypy3.5"
+    env: DB=mariadb TYPE=server
+    script: bench --site test_site run-tests --coverage
+
   - name: "Python 3.6 PostgreSQL"
     python: 3.6
     env: DB=postgres TYPE=server
