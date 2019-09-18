@@ -368,7 +368,8 @@ def get_perms_for(roles, perm_doctype='DocPerm'):
 		'docstatus': 0,
 		'role': ['in', roles]
 	}
-	return frappe.db.get_all(perm_doctype, fields=['*'], filters=filters)
+	fields = ["`tab{}`.`{}`".format(perm_doctype, r) for r in list(rights) + ["parent"]]
+	return frappe.db.get_all(perm_doctype, fields=fields, filters=filters, ignore_ifnull=True)
 
 def get_doctypes_with_custom_docperms():
 	'''Returns all the doctypes with Custom Docperms'''
