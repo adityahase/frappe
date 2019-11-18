@@ -14,10 +14,11 @@ import frappe.utils.scheduler
 import cProfile, pstats
 from six import StringIO
 from six.moves import reload_module
+import sqlparse
 from frappe.model.naming import revert_series_if_last
 
 unittest_runner = unittest.TextTestRunner
-SLOW_TEST_THRESHOLD = 2
+SLOW_TEST_THRESHOLD = 5
 
 def xmlrunner_wrapper(output):
 	"""Convenience wrapper to keep method signature unchanged for XMLTestRunner and TextTestRunner"""
@@ -92,19 +93,37 @@ def set_test_email_config():
 		"admin_password": "admin"
 	})
 
+def sql(*args, **kwargs):
+	result = frappe.db._sql(*args, **kwargs)
+	if frappe.db.db_type == 'postgres':
+		query = frappe.db._cursor.query
+	else:
+		query = frappe.db._cursor._executed
+
+	query = sqlparse.format(query.strip(), keyword_case="upper", reindent=True)
+	frappe.db.queries.append(query)
+	return result
 
 class TimeLoggingTestResult(unittest.TextTestResult):
 	def startTest(self, test):
 		self._started_at = time.time()
+		frappe.db._sql = frappe.db.sql
+		frappe.db.queries = []
+		frappe.db.sql = sql
 		super(TimeLoggingTestResult, self).startTest(test)
 
 	def addSuccess(self, test):
 		elapsed = time.time() - self._started_at
 		name = self.getDescription(test)
 		if elapsed >= SLOW_TEST_THRESHOLD:
-			self.stream.write("\n{} ({:.03}s)\n".format(name, elapsed))
+			self.stream.write("\nSlow {}: ({:.03}s)\n".format(name, elapsed))
 		super(TimeLoggingTestResult, self).addSuccess(test)
 
+	def stopTest(self, test):
+		frappe.db.sql = frappe.db._sql
+		name = self.getDescription(test)
+		self.stream.write("\nQueries {}: {}\n".format(name, len(frappe.db.queries)))
+		super(TimeLoggingTestResult, self).stopTest(test)
 
 def run_all_tests(app=None, verbose=False, profile=False, ui_tests=False, failfast=False):
 	import os
