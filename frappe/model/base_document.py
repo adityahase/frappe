@@ -324,7 +324,8 @@ class BaseDocument(object):
 				), list(d.values()))
 		except Exception as e:
 			if frappe.db.is_primary_key_violation(e):
-				if self.meta.autoname=="hash":
+				# Autoname can be set to empty too
+				if self.meta.autoname == "hash" or (not self.meta.autoname):
 					# hash collision? try again
 					self.name = None
 					self.db_insert()
