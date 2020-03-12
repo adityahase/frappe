@@ -105,7 +105,7 @@ def get_doctype_map(doctype, name, filters, order_by=None):
 		# non cached, build cache
 		try:
 			items = frappe.get_all(doctype, filters=filters, order_by = order_by)
-			cache.hset(cache_key, doctype, json.dumps(items))
+			cache.hset(cache_key, name, json.dumps(items))
 		except frappe.db.TableMissingError:
 			# executed from inside patch, ignore
 			items = []
