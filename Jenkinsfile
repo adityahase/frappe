@@ -1,15 +1,14 @@
 pipeline {
   agent any
   stages {
-    stage('Sanity Test') {
+    stage('Install') {
       steps {
-        sh 'python3 -v'
-        sh 'pwd'
-        sh 'whoami'
-        sh 'ls /'
-        sh 'ls /root'
-        sh 'cat /home/frappe/.ssh/id_rsa.pub'
+        dockerNode(image: 'python:3.7') {
+          sh 'whoami'
+        }
+
       }
     }
+
   }
 }
