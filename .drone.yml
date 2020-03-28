@@ -7,7 +7,16 @@ steps:
   image: redis
   commands:
   - redis-cli -h cache ping
+  - redis-cli -h queue ping
 
 services:
 - name: cache
   image: redis
+
+services:
+- name: queue
+  image: redis
+
+services:
+- name: mariadb
+  image: mariadb
