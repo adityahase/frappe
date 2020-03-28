@@ -16,10 +16,8 @@ services:
 - name: cache
   image: redis
 
-services:
 - name: queue
   image: redis
 
-services:
 - name: mariadb
   image: mariadb
