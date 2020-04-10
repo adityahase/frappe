@@ -41,6 +41,47 @@ matrix:
     env: DB=mariadb TYPE=server
     script: bench --site test_site run-tests --coverage
 
+  - name: "PyPy 3.5 MariaDB"
+    python: pypy3.5
+    env: DB=mariadb TYPE=server
+    script: bench --site test_site run-tests --coverage
+
+  - name: "PyPy 3.6 MariaDB"
+    python: pypy3.6
+    env: DB=mariadb TYPE=server
+    script: bench --site test_site run-tests --coverage
+
+  - name: "PyPy 3.5 PostgreSQL"
+    python: pypy3.%
+    env: DB=postgres TYPE=server
+    script: bench --site test_site run-tests --coverage
+
+  - name: "PyPy 3.6 PostgreSQL"
+    python: pypy3.6
+    env: DB=postgres TYPE=server
+    script: bench --site test_site run-tests --coverage
+
+  - name: "PyPy 3.5 Cypress"
+    python: pypy3.5
+    env: DB=mariadb TYPE=ui
+    before_script:
+    - bench --site test_site execute frappe.utils.install.complete_setup_wizard
+    - bench --site test_site_producer execute frappe.utils.install.complete_setup_wizard
+    script: bench --site test_site run-ui-tests frappe --headless
+
+  - name: "PyPy 3.6 Cypress"
+    python: pypy3.6
+    env: DB=mariadb TYPE=ui
+    before_script:
+    - bench --site test_site execute frappe.utils.install.complete_setup_wizard
+    - bench --site test_site_producer execute frappe.utils.install.complete_setup_wizard
+    script: bench --site test_site run-ui-tests frappe --headless
+
+  - name: "PyPy 2.7 MariaDB"
+    python: pypy2.7
+    env: DB=mariadb TYPE=server
+    script: bench --site test_site run-tests --coverage
+
 before_install:
   # install wkhtmltopdf
   - wget -O /tmp/wkhtmltox.tar.xz https://github.com/frappe/wkhtmltopdf/raw/master/wkhtmltox-0.12.3_linux-generic-amd64.tar.xz
