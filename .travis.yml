@@ -41,44 +41,26 @@ matrix:
     env: DB=mariadb TYPE=server
     script: bench --site test_site run-tests --coverage
 
-  - name: "PyPy 3.5 MariaDB"
-    python: pypy3.5
+  - name: "PyPy 3 MariaDB"
+    python: pypy3
     env: DB=mariadb TYPE=server
     script: bench --site test_site run-tests --coverage
 
-  - name: "PyPy 3.6 MariaDB"
-    python: pypy3.6
-    env: DB=mariadb TYPE=server
-    script: bench --site test_site run-tests --coverage
-
-  - name: "PyPy 3.5 PostgreSQL"
-    python: pypy3.%
+  - name: "PyPy 3 PostgreSQL"
+    python: pypy3
     env: DB=postgres TYPE=server
     script: bench --site test_site run-tests --coverage
 
-  - name: "PyPy 3.6 PostgreSQL"
-    python: pypy3.6
-    env: DB=postgres TYPE=server
-    script: bench --site test_site run-tests --coverage
-
-  - name: "PyPy 3.5 Cypress"
-    python: pypy3.5
+  - name: "PyPy 3 Cypress"
+    python: pypy3
     env: DB=mariadb TYPE=ui
     before_script:
     - bench --site test_site execute frappe.utils.install.complete_setup_wizard
     - bench --site test_site_producer execute frappe.utils.install.complete_setup_wizard
     script: bench --site test_site run-ui-tests frappe --headless
 
-  - name: "PyPy 3.6 Cypress"
-    python: pypy3.6
-    env: DB=mariadb TYPE=ui
-    before_script:
-    - bench --site test_site execute frappe.utils.install.complete_setup_wizard
-    - bench --site test_site_producer execute frappe.utils.install.complete_setup_wizard
-    script: bench --site test_site run-ui-tests frappe --headless
-
-  - name: "PyPy 2.7 MariaDB"
-    python: pypy2.7
+  - name: "PyPy 2 MariaDB"
+    python: pypy2
     env: DB=mariadb TYPE=server
     script: bench --site test_site run-tests --coverage
 
