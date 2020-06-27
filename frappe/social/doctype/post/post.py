@@ -4,8 +4,6 @@
 
 from __future__ import unicode_literals
 import frappe
-import requests
-from bs4 import BeautifulSoup
 from frappe.model.document import Document
 
 class Post(Document):
@@ -39,6 +37,8 @@ def frequently_visited_links():
 
 @frappe.whitelist()
 def get_link_info(url):
+	import requests
+	from bs4 import BeautifulSoup
 	cached_link_info = frappe.cache().hget("link_info", url)
 	if cached_link_info:
 		return cached_link_info

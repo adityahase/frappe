@@ -5,18 +5,10 @@ from __future__ import unicode_literals
 
 # IMPORTANT: only import safe functions as this module will be included in jinja environment
 import frappe
-from dateutil.parser._parser import ParserError
 import subprocess
 import operator
 import re, datetime, math, time
-import babel.dates
-from babel.core import UnknownLocaleError
-from dateutil import parser
-from num2words import num2words
-from six.moves import html_parser as HTMLParser
 from six.moves.urllib.parse import quote, urljoin
-from html2text import html2text
-from markdown2 import markdown, MarkdownError
 from six import iteritems, text_type, string_types, integer_types
 
 DATE_FORMAT = "%Y-%m-%d"
@@ -34,6 +26,8 @@ def getdate(string_date=None):
 	Converts string date (yyyy-mm-dd) to datetime.date object
 	"""
 
+	from dateutil.parser._parser import ParserError
+	from dateutil import parser
 	if not string_date:
 		return get_datetime().date()
 	if isinstance(string_date, datetime.datetime):
@@ -52,6 +46,7 @@ def getdate(string_date=None):
 		), title=frappe._('Invalid Date'))
 
 def get_datetime(datetime_str=None):
+	from dateutil import parser
 	if datetime_str is None:
 		return now_datetime()
 
@@ -73,6 +68,7 @@ def get_datetime(datetime_str=None):
 		return parser.parse(datetime_str)
 
 def to_timedelta(time_str):
+	from dateutil import parser
 	if isinstance(time_str, string_types):
 		t = parser.parse(time_str)
 		return datetime.timedelta(hours=t.hour, minutes=t.minute, seconds=t.second, microseconds=t.microsecond)
@@ -82,6 +78,7 @@ def to_timedelta(time_str):
 
 def add_to_date(date, years=0, months=0, weeks=0, days=0, hours=0, minutes=0, seconds=0, as_string=False, as_datetime=False):
 	"""Adds `days` to the given date"""
+	from dateutil import parser
 	from dateutil.relativedelta import relativedelta
 
 	if date==None:
@@ -221,6 +218,7 @@ def get_last_day(dt):
 
 
 def get_time(time_str):
+	from dateutil import parser
 	if isinstance(time_str, datetime.datetime):
 		return time_str.time()
 	elif isinstance(time_str, datetime.time):
@@ -274,6 +272,8 @@ def format_date(string_date=None, format_string=None):
 	* mm-dd-yyyy
 	* dd/mm/yyyy
 	"""
+	import babel.dates
+	from babel.core import UnknownLocaleError
 
 	if not string_date:
 		return ''
@@ -302,6 +302,8 @@ def format_time(time_string=None, format_string=None):
 	* HH:mm:ss
 	* HH:mm
 	"""
+	import babel.dates
+	from babel.core import UnknownLocaleError
 
 	if not time_string:
 		return ''
@@ -326,6 +328,8 @@ def format_datetime(datetime_string, format_string=None):
 	* dd-mm-yyyy HH:mm:ss
 	* mm-dd-yyyy HH:mm
 	"""
+	import babel.dates
+	from babel.core import UnknownLocaleError
 	if not datetime_string:
 		return
 
@@ -401,6 +405,7 @@ def get_timespan_date_range(timespan):
 
 def global_date_format(date, format="long"):
 	"""returns localized date in the form of January 1, 2012"""
+	import babel.dates
 	date = getdate(date)
 	formatted_date = babel.dates.format_date(date, locale=(frappe.local.lang or "en").replace("-", "_"), format=format)
 	return formatted_date
@@ -719,6 +724,7 @@ def in_words(integer, in_million=True):
 	"""
 	Returns string in words for the given integer.
 	"""
+	from num2words import num2words
 	locale = 'en_IN' if not in_million else frappe.local.lang
 	integer = int(integer)
 	try:
@@ -1193,6 +1199,8 @@ def strip(val, chars=None):
 	return (val or "").replace("\ufeff", "").replace("\u200b", "").strip(chars)
 
 def to_markdown(html):
+	from html2text import html2text
+	from six.moves import html_parser as HTMLParser
 	text = None
 	try:
 		text = html2text(html or '')
@@ -1202,6 +1210,7 @@ def to_markdown(html):
 	return text
 
 def md_to_html(markdown_text):
+	from markdown2 import markdown, MarkdownError
 	extras = {
 		'fenced-code-blocks': None,
 		'tables': None,

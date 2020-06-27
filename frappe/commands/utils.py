@@ -8,8 +8,6 @@ import frappe
 from frappe.commands import pass_context, get_site
 from frappe.exceptions import SiteNotSpecifiedError
 from frappe.utils import update_progress_bar, get_bench_path
-from frappe.utils.response import json_handler
-from coverage import Coverage
 import cProfile, pstats
 from six import StringIO
 
@@ -132,6 +130,7 @@ def reset_perms(context):
 @pass_context
 def execute(context, method, args=None, kwargs=None, profile=False):
 	"Execute a function"
+	from frappe.utils.response import json_handler
 	for site in context.sites:
 		try:
 			frappe.init(site=site)
@@ -474,6 +473,7 @@ def run_tests(context, app=None, module=None, doctype=None, test=(),
 
 	"Run tests"
 	import frappe.test_runner
+	from coverage import Coverage
 	tests = test
 
 	site = get_site(context)

@@ -1,7 +1,5 @@
 from __future__ import unicode_literals, print_function
 import redis
-from rq import Connection, Queue, Worker
-from rq.logutils import setup_loghandlers
 from frappe.utils import cstr
 from collections import defaultdict
 import frappe
@@ -9,7 +7,6 @@ import os, socket, time
 from frappe import _
 from six import string_types
 from uuid import uuid4
-import frappe.monitor
 
 # imports - third-party imports
 
@@ -81,6 +78,7 @@ def run_doc_method(doctype, name, doc_method, **kwargs):
 
 def execute_job(site, method, event, job_name, kwargs, user=None, is_async=True, retry=0):
 	'''Executes job in a worker, performs commit/rollback and logs if there is any error'''
+	import frappe.monitor
 	if is_async:
 		frappe.connect(site)
 		if os.environ.get('CI'):
@@ -136,6 +134,8 @@ def execute_job(site, method, event, job_name, kwargs, user=None, is_async=True,
 
 def start_worker(queue=None, quiet = False):
 	'''Wrapper to start rq worker. Connects to redis and monitors these queues.'''
+	from rq import Connection, Worker
+	from rq.logutils import setup_loghandlers
 	with frappe.init_site():
 		# empty init is required to get redis_queue from common_site_config.json
 		redis_connection = get_redis_conn()
@@ -209,6 +209,7 @@ def get_queue_list(queue_list=None):
 
 def get_queue(queue, is_async=True):
 	'''Returns a Queue object tied to a redis connection'''
+	from rq import Queue
 	validate_queue(queue)
 	return Queue(queue, connection=get_redis_conn(), is_async=is_async)
 

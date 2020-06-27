@@ -6,7 +6,6 @@ from six.moves import range
 import json, os
 from semantic_version import Version
 import frappe
-import requests
 import subprocess # nosec
 from frappe.utils import cstr
 from frappe.utils.gitutils import get_app_branch
@@ -184,6 +183,7 @@ def parse_latest_non_beta_release(response):
 def check_release_on_github(app):
 	# Check if repo remote is on github
 	from subprocess import CalledProcessError
+	import requests
 	try:
 		remote_url = subprocess.check_output("cd ../apps/{} && git ls-remote --get-url".format(app), shell=True).decode()
 	except CalledProcessError:

@@ -11,8 +11,6 @@ from werkzeug.local import Local, release_local
 import os, sys, importlib, inspect, json
 from past.builtins import cmp
 
-from faker import Faker
-
 # public
 from .exceptions import *
 from .utils.jinja import (get_jenv, get_template, render_template, get_email_from_template, get_jloader)
@@ -1695,6 +1693,7 @@ def parse_json(val):
 	return parse_json(val)
 
 def mock(type, size=1, locale='en'):
+	from faker import Faker
 	results = []
 	faker = Faker(locale)
 	if not type in dir(faker):

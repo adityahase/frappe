@@ -16,7 +16,6 @@ from frappe import _
 from frappe.commands import get_site, pass_context
 from frappe.commands.scheduler import _is_scheduler_enabled
 from frappe.exceptions import SiteNotSpecifiedError
-from frappe.installer import update_site_config
 from frappe.utils import get_site_path, touch_file
 
 

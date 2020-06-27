@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-from PIL import Image, ImageDraw
 from hashlib import md5
 import base64
 import random
@@ -16,6 +15,7 @@ class Identicon(object):
 		`str_` is the string used to generate the identicon.
 		`background` is the background of the identicon.
 		"""
+		from PIL import Image, ImageDraw
 		w = h = BORDER_SIZE * 2 + SQUARE_SIZE * GRID_SIZE
 		self.image = Image.new('RGB', (w, h), background)
 		self.draw = ImageDraw.Draw(self.image)

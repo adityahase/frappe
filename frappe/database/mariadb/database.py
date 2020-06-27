@@ -9,7 +9,6 @@ from pymysql.constants 	import ER, FIELD_TYPE
 from pymysql.converters import conversions
 
 from frappe.utils import get_datetime, cstr
-from markdown2 import UnicodeWithAttrs
 from frappe.database.database import Database
 from six import PY2, binary_type, text_type, string_types
 from frappe.database.mariadb.schema import MariaDBTable
@@ -60,6 +59,7 @@ class MariaDBDatabase(Database):
 		}
 
 	def get_connection(self):
+		# from markdown2 import UnicodeWithAttrs
 		warnings.filterwarnings('ignore', category=pymysql.Warning)
 		usessl = 0
 		if frappe.conf.db_ssl_ca and frappe.conf.db_ssl_cert and frappe.conf.db_ssl_key:
@@ -294,3 +294,11 @@ class MariaDBDatabase(Database):
 
 	def get_database_list(self, target):
 		return [d[0] for d in self.sql("SHOW DATABASES;")]
+
+class UnicodeWithAttrs(text_type):
+	"""A subclass of unicode used for the return value of conversion to
+	possibly attach some attributes. E.g. the "toc_html" attribute when
+	the "toc" extra is used.
+	"""
+	metadata = None
+	toc_html = None
