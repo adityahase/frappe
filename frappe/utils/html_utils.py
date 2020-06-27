@@ -2,12 +2,12 @@ from __future__ import unicode_literals
 import frappe
 import json
 import re
-import bleach
 import bleach_whitelist.bleach_whitelist as bleach_whitelist
 from six import string_types
 from bs4 import BeautifulSoup
 
 def clean_html(html):
+	import bleach
 	if not isinstance(html, string_types):
 		return html
 
@@ -19,6 +19,7 @@ def clean_html(html):
 		strip=True, strip_comments=True)
 
 def clean_email_html(html):
+	import bleach
 	if not isinstance(html, string_types):
 		return html
 
@@ -53,6 +54,7 @@ def sanitize_html(html, linkify=False):
 
 	Does not sanitize JSON, as it could lead to future problems
 	"""
+	import bleach
 	if not isinstance(html, string_types):
 		return html
 
