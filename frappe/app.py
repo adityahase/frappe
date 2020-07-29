@@ -112,6 +112,8 @@ def application(request):
 		if response and hasattr(frappe.local, 'rate_limiter'):
 			response.headers.extend(frappe.local.rate_limiter.headers())
 
+		response.autocorrect_location_header = False
+		
 		frappe.destroy()
 
 	return response
