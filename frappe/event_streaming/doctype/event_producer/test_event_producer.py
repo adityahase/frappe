@@ -352,16 +352,16 @@ def unsubscribe_doctypes(producer_url):
 
 def connect():
 	try:
-		producer_site = FrappeClient(
+		return FrappeClient(
 			url=producer_url,
 			username='Administrator',
 			password='admin',
 			verify=False
 		)
 	except Exception:
-		connect()
-	else:
-		if not producer_site:
-			connect()
-		else:
-			return producer_site
+		import traceback
+		traceback.print_exc()
+		from pprint import pprint
+		pprint(locals())
+		pprint(globals())
+		return connect()
