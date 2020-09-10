@@ -28,6 +28,11 @@ if __name__ == "__main__":
     print("Build Type: {}".format(build_type))
     print("Commit Range: {}".format(commit_range))
     
+    # TRAVIS_COMMIT_RANGE is empty for initial commit on a new branch
+    # https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
+    if not commit_range:
+        sys.exit(2)
+
     try:
         files_changed = get_output("git diff --name-only {}".format(commit_range), shell=False)
     except Exception:
