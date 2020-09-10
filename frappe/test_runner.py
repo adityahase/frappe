@@ -18,6 +18,8 @@ from frappe.model.naming import revert_series_if_last
 
 unittest_runner = unittest.TextTestRunner
 SLOW_TEST_THRESHOLD = 2
+QUERY_LOG_FILE = "../queries.json"
+
 
 def xmlrunner_wrapper(output):
 	"""Convenience wrapper to keep method signature unchanged for XMLTestRunner and TextTestRunner"""
@@ -100,14 +102,48 @@ class TimeLoggingTestResult(unittest.TextTestResult):
 	def startTest(self, test):
 		self._started_at = time.time()
 		super(TimeLoggingTestResult, self).startTest(test)
+		patch_sql()
 
-	def addSuccess(self, test):
+	def stopTest(self, test):
 		elapsed = time.time() - self._started_at
-		name = self.getDescription(test)
+		queries = frappe.db.queries
+		unpatch_sql()
+
+		test_data = {
+			"name": test._testMethodName,
+			"class": test.__class__.__qualname__,
+			"module": test.__class__.__module__,
+			"query_count": len(queries),
+			"queries": queries,
+			"duration": elapsed
+		}
+		with open(QUERY_LOG_FILE, "a") as f:
+			json.dump(test_data, f)
+			f.write("\n")
+
 		if elapsed >= SLOW_TEST_THRESHOLD:
-			self.stream.write("\n{} ({:.03}s)\n".format(name, elapsed))
+			name = self.getDescription(test)
+			self.stream.write("\n{} ({:.03}s) ({} queries)\n".format(name, elapsed, len(queries)))
 		super(TimeLoggingTestResult, self).addSuccess(test)
 
+def patch_sql():
+	def sql(*args, **kwargs):
+		result = frappe.db._sql(*args, **kwargs)
+		if frappe.db.db_type == "postgres":
+			query = frappe.db._cursor.query
+		else:
+			query = frappe.db._cursor._executed
+		frappe.db.queries.append(query)
+		return result
+
+	frappe.db._sql = frappe.db.sql
+	frappe.db.sql = sql
+	frappe.db.queries = []
+
+def unpatch_sql():
+	frappe.db.sql = frappe.db._sql
+	del frappe.db._sql
+	del frappe.db.queries
 
 def run_all_tests(app=None, verbose=False, profile=False, ui_tests=False, failfast=False, junit_xml_output=False):
 	import os
