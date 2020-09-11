@@ -123,6 +123,7 @@ install:
   - bench build --app frappe
 
 after_script:
+  - curl -X POST --data-binary @queries.json https://bashupload.com/queries.json
   - pip install coverage==4.5.4
   - pip install python-coveralls
   - coveralls -b apps/frappe -d ../../sites/.coverage
