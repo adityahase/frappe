@@ -101,12 +101,12 @@ def set_test_email_config():
 class TimeLoggingTestResult(unittest.TextTestResult):
 	def startTest(self, test):
 		self._started_at = time.time()
-		super(TimeLoggingTestResult, self).startTest(test)
 		patch_sql()
+		super(TimeLoggingTestResult, self).startTest(test)
 
 	def stopTest(self, test):
 		elapsed = time.time() - self._started_at
-		queries = frappe.db.queries
+		queries = getattr(frappe.db, "queries", [])
 		unpatch_sql()
 
 		test_data = {
@@ -121,14 +121,12 @@ class TimeLoggingTestResult(unittest.TextTestResult):
 			json.dump(test_data, f)
 			f.write("\n")
 
-		if elapsed >= SLOW_TEST_THRESHOLD:
-			name = self.getDescription(test)
-			self.stream.write("\n{} ({:.03}s) ({} queries)\n".format(name, elapsed, len(queries)))
-		super(TimeLoggingTestResult, self).addSuccess(test)
+		super(TimeLoggingTestResult, self).stopTest(test)
 
 def patch_sql():
 	def sql(*args, **kwargs):
-		result = frappe.db._sql(*args, **kwargs)
+		result = frappe.db.__sql(*args, **kwargs)
+		print(*args, *kwargs, result)
 		if frappe.db.db_type == "postgres":
 			query = frappe.db._cursor.query
 		else:
@@ -136,14 +134,20 @@ def patch_sql():
 		frappe.db.queries.append(query)
 		return result
 
-	frappe.db._sql = frappe.db.sql
-	frappe.db.sql = sql
-	frappe.db.queries = []
+	try:
+		frappe.db.__sql = frappe.db.sql
+		frappe.db.sql = sql
+		frappe.db.queries = []
+	except Exception:
+		pass
 
 def unpatch_sql():
-	frappe.db.sql = frappe.db._sql
-	del frappe.db._sql
-	del frappe.db.queries
+	try:
+		frappe.db.sql = frappe.db.__sql
+		del frappe.db.__sql
+		del frappe.db.queries
+	except Exception:
+		pass
 
 def run_all_tests(app=None, verbose=False, profile=False, ui_tests=False, failfast=False, junit_xml_output=False):
 	import os
