@@ -126,7 +126,6 @@ class TimeLoggingTestResult(unittest.TextTestResult):
 def patch_sql():
 	def sql(*args, **kwargs):
 		result = frappe.db.__sql(*args, **kwargs)
-		print(*args, *kwargs, result)
 		if frappe.db.db_type == "postgres":
 			query = frappe.db._cursor.query
 		else:
