@@ -46,7 +46,7 @@ def application(request: Request):
 		rollback = True
 
 		init_request(request)
-
+		frappe.sentry.set_sentry_context()
 		frappe.recorder.record()
 		frappe.monitor.start()
 		frappe.rate_limiter.apply()
