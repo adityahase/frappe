@@ -24,6 +24,7 @@ from frappe.middlewares import StaticDataMiddleware
 from frappe.utils import get_site_name, sanitize_html
 from frappe.utils.error import make_error_snapshot
 from frappe.website.serve import get_response
+import sentry_sdk
 
 local_manager = LocalManager(frappe.local)
 
@@ -338,6 +339,13 @@ def after_request(rollback):
 	update_comments_in_parent_after_request()
 
 	return rollback
+
+
+sentry_sdk.init(
+	send_default_pii=True,
+	traces_sample_rate=1.0,
+	attach_stacktrace=True,
+)
 
 
 def serve(
