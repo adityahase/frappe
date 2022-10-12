@@ -406,6 +406,7 @@ ignore_links_on_delete = [
 
 # Request Hooks
 before_request = [
+	"frappe.sentry.set_sentry_context",
 	"frappe.recorder.record",
 	"frappe.monitor.start",
 	"frappe.rate_limiter.apply",
