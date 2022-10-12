@@ -74,6 +74,9 @@ dependencies = [
     "google-api-python-client~=2.2.0",
     "google-auth-oauthlib~=0.4.4",
     "google-auth~=1.29.0",
+
+    # Sentry
+    "sentry-sdk~=1.9.10",
 ]
 
 [build-system]
