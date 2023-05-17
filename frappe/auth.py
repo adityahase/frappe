@@ -235,7 +235,9 @@ class LoginManager:
 		_raw_user_name = user
 		user = User.find_by_credentials(user, pwd)
 
+		ip_tracker = get_login_attempt_tracker(frappe.local.request_ip)
 		if not user:
+			ip_tracker and ip_tracker.add_failure_attempt()
 			self.fail("Invalid login credentials", user=_raw_user_name)
 
 		# Current login flow uses cached credentials for authentication while checking OTP.
@@ -246,12 +248,15 @@ class LoginManager:
 
 		if not user.is_authenticated:
 			tracker and tracker.add_failure_attempt()
+			ip_tracker and ip_tracker.add_failure_attempt()
 			self.fail("Invalid login credentials", user=user.name)
 		elif not (user.name == "Administrator" or user.enabled):
 			tracker and tracker.add_failure_attempt()
+			ip_tracker and ip_tracker.add_failure_attempt()
 			self.fail("User disabled or missing", user=user.name)
 		else:
 			tracker and tracker.add_success_attempt()
+			ip_tracker and ip_tracker.add_success_attempt()
 		self.user = user.name
 
 	def force_user_to_reset_password(self):
@@ -451,6 +456,8 @@ def get_login_attempt_tracker(user_name: str, raise_locked_exception: bool = Tru
 
 	tracker = LoginAttemptTracker(user_name, **tracker_kwargs)
 
+	print(tracker.user_name, tracker.login_failed_count, tracker.login_failed_time)
+
 	if raise_locked_exception and track_login_attempts and not tracker.is_user_allowed():
 		frappe.throw(
 			_("Your account has been locked and will resume after {0} seconds").format(
@@ -541,7 +548,6 @@ class LoginAttemptTracker:
 		login_failed_time = self.login_failed_time
 		login_failed_count = self.login_failed_count or 0
 		current_time = get_datetime()
-
 		if (
 			login_failed_time
 			and login_failed_time + self.lock_interval > current_time
