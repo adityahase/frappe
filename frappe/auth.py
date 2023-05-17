@@ -456,8 +456,6 @@ def get_login_attempt_tracker(user_name: str, raise_locked_exception: bool = Tru
 
 	tracker = LoginAttemptTracker(user_name, **tracker_kwargs)
 
-	print(tracker.user_name, tracker.login_failed_count, tracker.login_failed_time)
-
 	if raise_locked_exception and track_login_attempts and not tracker.is_user_allowed():
 		frappe.throw(
 			_("Your account has been locked and will resume after {0} seconds").format(
