@@ -1,12 +1,15 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
-# MIT License. See license.txt
+# License: MIT. See LICENSE
 
-# For license information, please see license.txt
+# License: MIT. See LICENSE
 
-from __future__ import unicode_literals
 import frappe
-
 from frappe.model.document import Document
+
 
 class PatchLog(Document):
 	pass
+
+
+def before_migrate():
+	frappe.reload_doc("core", "doctype", "patch_log")

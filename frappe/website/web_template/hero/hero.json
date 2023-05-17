@@ -1,4 +1,5 @@
 {
+ "__unsaved": 1,
  "creation": "2020-04-19 15:26:23.140620",
  "docstatus": 0,
  "doctype": "Web Template",
@@ -40,6 +41,7 @@
    "reqd": 0
   },
   {
+   "default": "Left",
    "fieldname": "align",
    "fieldtype": "Select",
    "label": "Align",
@@ -48,8 +50,9 @@
   }
  ],
  "idx": 0,
- "modified": "2020-09-15 11:42:46.886991",
+ "modified": "2022-03-21 14:30:14.405261",
  "modified_by": "Administrator",
+ "module": "Website",
  "name": "Hero",
  "owner": "Administrator",
  "standard": 1,

@@ -2,6 +2,7 @@
  "actions": [],
  "allow_import": 1,
  "creation": "2013-01-29 10:47:14",
+ "default_view": "Inbox",
  "description": "Keeps track of all communications",
  "doctype": "DocType",
  "document_type": "Setup",
@@ -51,6 +52,7 @@
   "email_inbox",
   "message_id",
   "uid",
+  "imap_folder",
   "email_status",
   "has_attachment",
   "feedback_section",
@@ -152,7 +154,7 @@
    "fieldname": "communication_type",
    "fieldtype": "Select",
    "label": "Communication Type",
-   "options": "Communication\nComment\nChat\nBot\nNotification\nFeedback",
+   "options": "Communication\nComment\nChat\nNotification\nFeedback\nAutomated Message",
    "read_only": 1,
    "reqd": 1
   },
@@ -163,7 +165,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Comment Type",
-   "options": "\nComment\nLike\nInfo\nLabel\nWorkflow\nCreated\nSubmitted\nCancelled\nUpdated\nDeleted\nAssigned\nAssignment Completed\nAttachment\nAttachment Removed\nShared\nUnshared\nBot\nRelinked",
+   "options": "\nComment\nLike\nInfo\nLabel\nWorkflow\nCreated\nSubmitted\nCancelled\nUpdated\nDeleted\nAssigned\nAssignment Completed\nAttachment\nAttachment Removed\nShared\nUnshared\nRelinked",
    "read_only": 1
   },
   {
@@ -197,7 +199,6 @@
    "label": "More Information"
   },
   {
-   "bold": 0,
    "default": "Now",
    "fieldname": "communication_date",
    "fieldtype": "Datetime",
@@ -317,7 +318,7 @@
   },
   {
    "fieldname": "message_id",
-   "fieldtype": "Data",
+   "fieldtype": "Small Text",
    "ignore_xss_filter": 1,
    "label": "Message ID",
    "length": 995,
@@ -382,12 +383,19 @@
    "label": "Timeline Links",
    "options": "Communication Link",
    "permlevel": 2
+  },
+  {
+   "fieldname": "imap_folder",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "IMAP Folder",
+   "read_only": 1
   }
  ],
  "icon": "fa fa-comment",
  "idx": 1,
  "links": [],
- "modified": "2019-12-27 14:44:04.880373",
+ "modified": "2023-03-16 12:04:18.113817",
  "modified_by": "Administrator",
  "module": "Core",
  "name": "Communication",
@@ -426,13 +434,13 @@
    "write": 1
   },
   {
-    "create": 1,
-    "delete": 1,
-    "email": 1,
-    "export":1,
-    "print":1,
-    "read": 1,
-    "role": "Inbox User"
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Inbox User"
   },
   {
    "delete": 1,
@@ -446,6 +454,7 @@
  "sender_field": "sender",
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "subject_field": "subject",
  "title_field": "subject",
  "track_changes": 1,

@@ -1,19 +1,17 @@
 // Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 // MIT License. See license.txt
-import ListFilter from './list_filter';
-frappe.provide('frappe.views');
+import ListFilter from "./list_filter";
+frappe.provide("frappe.views");
 
 // opts:
 // stats = list of fields
 // doctype
 // parent
-// set_filter = function called on click
 
 frappe.views.ListSidebar = class ListSidebar {
 	constructor(opts) {
 		$.extend(this, opts);
 		this.make();
-		this.cat_tags = [];
 	}
 
 	make() {
@@ -23,27 +21,25 @@ frappe.views.ListSidebar = class ListSidebar {
 			.html(sidebar_content)
 			.appendTo(this.page.sidebar.empty());
 
-		this.setup_reports();
 		this.setup_list_filter();
-		this.setup_views();
-		this.setup_kanban_boards();
-		this.setup_calendar_view();
-		this.setup_email_inbox();
-		this.setup_keyboard_shortcuts();
 		this.setup_list_group_by();
 
 		// do not remove
 		// used to trigger custom scripts
-		$(document).trigger('list_sidebar_setup');
+		$(document).trigger("list_sidebar_setup");
 
-		if (this.list_view.list_view_settings && this.list_view.list_view_settings.disable_sidebar_stats) {
-			this.sidebar.find('.sidebar-stat').remove();
+		if (
+			this.list_view.list_view_settings &&
+			this.list_view.list_view_settings.disable_sidebar_stats
+		) {
+			this.sidebar.find(".list-tags").remove();
 		} else {
-			this.sidebar.find('.list-stats').on('click', (e) => {
+			this.sidebar.find(".list-stats").on("click", (e) => {
 				this.reload_stats();
 			});
 		}
 
+		this.add_insights_banner();
 	}
 
 	setup_views() {
@@ -51,13 +47,13 @@ frappe.views.ListSidebar = class ListSidebar {
 
 		if (frappe.views.calendar[this.doctype]) {
 			this.sidebar.find('.list-link[data-view="Calendar"]').removeClass("hide");
-			this.sidebar.find('.list-link[data-view="Gantt"]').removeClass('hide');
+			this.sidebar.find('.list-link[data-view="Gantt"]').removeClass("hide");
 			show_list_link = true;
 		}
 		//show link for kanban view
-		this.sidebar.find('.list-link[data-view="Kanban"]').removeClass('hide');
+		this.sidebar.find('.list-link[data-view="Kanban"]').removeClass("hide");
 		if (this.doctype === "Communication" && frappe.boot.email_accounts.length) {
-			this.sidebar.find('.list-link[data-view="Inbox"]').removeClass('hide');
+			this.sidebar.find('.list-link[data-view="Inbox"]').removeClass("hide");
 			show_list_link = true;
 		}
 
@@ -65,34 +61,50 @@ frappe.views.ListSidebar = class ListSidebar {
 			this.sidebar.find(".tree-link").removeClass("hide");
 		}
 
-		this.current_view = 'List';
+		this.current_view = "List";
 		var route = frappe.get_route();
 		if (route.length > 2 && frappe.views.view_modes.includes(route[2])) {
 			this.current_view = route[2];
 
-			if (this.current_view === 'Kanban') {
+			if (this.current_view === "Kanban") {
 				this.kanban_board = route[3];
-			} else if (this.current_view === 'Inbox') {
+			} else if (this.current_view === "Inbox") {
 				this.email_account = route[3];
 			}
 		}
 
 		// disable link for current view
-		this.sidebar.find('.list-link[data-view="' + this.current_view + '"] a')
-			.attr('disabled', 'disabled').addClass('disabled');
+		this.sidebar
+			.find('.list-link[data-view="' + this.current_view + '"] a')
+			.attr("disabled", "disabled")
+			.addClass("disabled");
 
 		//enable link for Kanban view
-		this.sidebar.find('.list-link[data-view="Kanban"] a, .list-link[data-view="Inbox"] a')
-			.attr('disabled', null).removeClass('disabled');
+		this.sidebar
+			.find('.list-link[data-view="Kanban"] a, .list-link[data-view="Inbox"] a')
+			.attr("disabled", null)
+			.removeClass("disabled");
 
 		// show image link if image_view
 		if (this.list_view.meta.image_field) {
-			this.sidebar.find('.list-link[data-view="Image"]').removeClass('hide');
+			this.sidebar.find('.list-link[data-view="Image"]').removeClass("hide");
+			show_list_link = true;
+		}
+
+		if (
+			this.list_view.settings.get_coords_method ||
+			(this.list_view.meta.fields.find((i) => i.fieldname === "latitude") &&
+				this.list_view.meta.fields.find((i) => i.fieldname === "longitude")) ||
+			this.list_view.meta.fields.find(
+				(i) => i.fieldname === "location" && i.fieldtype == "Geolocation"
+			)
+		) {
+			this.sidebar.find('.list-link[data-view="Map"]').removeClass("hide");
 			show_list_link = true;
 		}
 
 		if (show_list_link) {
-			this.sidebar.find('.list-link[data-view="List"]').removeClass('hide');
+			this.sidebar.find('.list-link[data-view="List"]').removeClass("hide");
 		}
 	}
 
@@ -100,16 +112,18 @@ frappe.views.ListSidebar = class ListSidebar {
 		// add reports linked to this doctype to the dropdown
 		var me = this;
 		var added = [];
-		var dropdown = this.page.sidebar.find('.reports-dropdown');
+		var dropdown = this.page.sidebar.find(".reports-dropdown");
 		var divider = false;
 
-		var add_reports = function(reports) {
-			$.each(reports, function(name, r) {
+		var add_reports = function (reports) {
+			$.each(reports, function (name, r) {
 				if (!r.ref_doctype || r.ref_doctype == me.doctype) {
-					var report_type = r.report_type === 'Report Builder' ?
-						`List/${r.ref_doctype}/Report` : 'query-report';
+					var report_type =
+						r.report_type === "Report Builder"
+							? `List/${r.ref_doctype}/Report`
+							: "query-report";
 
-					var route = r.route || report_type + '/' + (r.title || r.name);
+					var route = r.route || report_type + "/" + (r.title || r.name);
 
 					if (added.indexOf(route) === -1) {
 						// don't repeat
@@ -120,8 +134,9 @@ frappe.views.ListSidebar = class ListSidebar {
 							divider = true;
 						}
 
-						$('<li><a href="#' + route + '">' +
-							__(r.title || r.name) + '</a></li>').appendTo(dropdown);
+						$(
+							'<li><a href="#' + route + '">' + __(r.title || r.name) + "</a></li>"
+						).appendTo(dropdown);
 					}
 				}
 			});
@@ -133,7 +148,10 @@ frappe.views.ListSidebar = class ListSidebar {
 		}
 
 		// Sort reports alphabetically
-		var reports = Object.values(frappe.boot.user.all_reports).sort((a,b) => a.title.localeCompare(b.title)) || [];
+		var reports =
+			Object.values(frappe.boot.user.all_reports).sort((a, b) =>
+				a.title.localeCompare(b.title)
+			) || [];
 
 		// from specially tagged reports
 		add_reports(reports);
@@ -141,95 +159,20 @@ frappe.views.ListSidebar = class ListSidebar {
 
 	setup_list_filter() {
 		this.list_filter = new ListFilter({
-			wrapper: this.page.sidebar.find('.list-filters'),
+			wrapper: this.page.sidebar.find(".list-filters"),
 			doctype: this.doctype,
-			list_view: this.list_view
+			list_view: this.list_view,
 		});
 	}
 
 	setup_kanban_boards() {
-		const $dropdown = this.page.sidebar.find('.kanban-dropdown');
+		const $dropdown = this.page.sidebar.find(".kanban-dropdown");
 		frappe.views.KanbanView.setup_dropdown_in_sidebar(this.doctype, $dropdown);
 	}
 
-	setup_calendar_view() {
-		const doctype = this.doctype;
-
-		frappe.db.get_list('Calendar View', {
-			filters: {
-				reference_doctype: doctype
-			}
-		}).then(result => {
-			if (!(result && Array.isArray(result) && result.length)) return;
-			const calendar_views = result;
-			const $link_calendar = this.sidebar.find('.list-link[data-view="Calendar"]');
-
-			let default_link = '';
-			if (frappe.views.calendar[this.doctype]) {
-				// has standard calendar view
-				default_link = `<li><a href="#List/${doctype}/Calendar/Default">
-					${ __("Default") }</a></li>`;
-			}
-			const other_links = calendar_views.map(
-				calendar_view => `<li><a href="#List/${doctype}/Calendar/${calendar_view.name}">
-					${ __(calendar_view.name) }</a>
-				</li>`
-			).join('');
-
-			const dropdown_html = `
-				<div class="btn-group">
-					<a class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-						${ __("Calendar") } <span class="caret"></span>
-					</a>
-					<ul class="dropdown-menu calendar-dropdown" style="max-height: 300px; overflow-y: auto;">
-						${default_link}
-						${other_links}
-					</ul>
-				</div>
-			`;
-			$link_calendar.removeClass('hide');
-			$link_calendar.html(dropdown_html);
-		});
-	}
-
-	setup_email_inbox() {
-		// get active email account for the user and add in dropdown
-		if (this.doctype != "Communication")
-			return;
-
-		let $dropdown = this.page.sidebar.find('.email-account-dropdown');
-		let divider = false;
-
-		if (has_common(frappe.user_roles, ["System Manager", "Administrator"])) {
-			$(`<li class="new-email-account"><a>${__("New Email Account")}</a></li>`)
-				.appendTo($dropdown);
-		}
-
-		let accounts = frappe.boot.email_accounts;
-		accounts.forEach((account) => {
-			let email_account = (account.email_id == "All Accounts") ? "All Accounts" : account.email_account;
-			let route = ["List", "Communication", "Inbox", email_account].join('/');
-			let display_name = ["All Accounts", "Sent Mail", "Spam", "Trash"].includes(account.email_id) ? __(account.email_id) : account.email_id;
-			
-			if (!divider) {
-				this.get_divider().appendTo($dropdown);
-				divider = true;
-			}
-			$(`<li><a href="#${route}">${display_name}</a></li>`).appendTo($dropdown);
-			if (account.email_id === "Sent Mail")
-				divider = false;
-		});
-
-		$dropdown.find('.new-email-account').click(function() {
-			frappe.new_doc("Email Account");
-		});
-	}
-
 	setup_keyboard_shortcuts() {
-		this.sidebar.find('.list-link > a, .list-link > .btn-group > a').each((i, el) => {
-			frappe.ui.keys
-				.get_shortcut_group(this.page)
-				.add($(el));
+		this.sidebar.find(".list-link > a, .list-link > .btn-group > a").each((i, el) => {
+			frappe.ui.keys.get_shortcut_group(this.page).add($(el));
 		});
 	}
 
@@ -238,119 +181,59 @@ frappe.views.ListSidebar = class ListSidebar {
 			doctype: this.doctype,
 			sidebar: this,
 			list_view: this.list_view,
-			page: this.page
+			page: this.page,
 		});
-	}
-
-	get_cat_tags() {
-		return this.cat_tags;
 	}
 
 	get_stats() {
 		var me = this;
 		frappe.call({
-			method: 'frappe.desk.reportview.get_sidebar_stats',
-			type: 'GET',
+			method: "frappe.desk.reportview.get_sidebar_stats",
+			type: "GET",
 			args: {
 				stats: me.stats,
 				doctype: me.doctype,
 				// wait for list filter area to be generated before getting filters, or fallback to default filters
-				filters: (me.list_view.filter_area ? me.list_filter.get_current_filters() : me.default_filters) || []
+				filters:
+					(me.list_view.filter_area
+						? me.list_view.get_filters_for_args()
+						: me.default_filters) || [],
 			},
-			callback: function(r) {
-				me.render_stat("_user_tags", (r.message.stats || {})["_user_tags"]);
-				let stats_dropdown = me.sidebar.find('.list-stats-dropdown');
-				frappe.utils.setup_search(stats_dropdown, '.stat-link', '.stat-label');
-			}
+			callback: function (r) {
+				let stats = (r.message.stats || {})["_user_tags"] || [];
+				me.render_stat(stats);
+				let stats_dropdown = me.sidebar.find(".list-stats-dropdown");
+				frappe.utils.setup_search(stats_dropdown, ".stat-link", ".stat-label");
+			},
 		});
 	}
 
-	render_stat(field, stat, tags) {
-		var me = this;
-		var sum = 0;
-		var stats = [];
-		var label = frappe.meta.docfield_map[this.doctype][field] ?
-			frappe.meta.docfield_map[this.doctype][field].label : field;
-
-		stat = (stat || []).sort(function(a, b) {
-			return b[1] - a[1];
-		});
-		$.each(stat, function(i, v) {
-			sum = sum + v[1];
-		});
-
-		if (tags) {
-			for (var t in tags) {
-				var nfound = -1;
-				for (var i in stat) {
-					if (tags[t] === stat[i][0]) {
-						stats.push(stat[i]);
-						nfound = i;
-						break;
-					}
-				}
-				if (nfound < 0) {
-					stats.push([tags[t], 0]);
-				} else {
-					me.tempstats["_user_tags"].splice(nfound, 1);
-				}
-			}
-			field = "_user_tags";
-		} else {
-			stats = stat;
-		}
-		var context = {
-			field: field,
-			stat: stats,
-			sum: sum,
-			label: field === '_user_tags' ? (tags ? __(label) : __("Tags")) : __(label),
+	render_stat(stats) {
+		let args = {
+			stats: stats,
+			label: __("Tags"),
 		};
-		$(frappe.render_template("list_sidebar_stat", context))
-			.on("click", ".stat-link", function() {
-				var fieldname = $(this).attr('data-field');
-				var label = $(this).attr('data-label');
-				var condition = "like";
-				var existing = me.list_view.filter_area.filter_list.get_filter(fieldname);
-				if(existing) {
+
+		let tag_list = $(frappe.render_template("list_sidebar_stat", args)).on(
+			"click",
+			".stat-link",
+			(e) => {
+				let fieldname = $(e.currentTarget).attr("data-field");
+				let label = $(e.currentTarget).attr("data-label");
+				let condition = "like";
+				let existing = this.list_view.filter_area.filter_list.get_filter(fieldname);
+				if (existing) {
 					existing.remove();
 				}
 				if (label == "No Tags") {
 					label = "%,%";
 					condition = "not like";
 				}
-				me.list_view.filter_area.filter_list.add_filter(me.list_view.doctype, fieldname, condition, label)
-					.then(function() {
-						me.list_view.refresh();
-					});
-			})
-			.appendTo(this.sidebar.find(".list-stats-dropdown"));
-	}
+				this.list_view.filter_area.add(this.doctype, fieldname, condition, label);
+			}
+		);
 
-	set_fieldtype(df) {
-
-		// scrub
-		if (df.fieldname == "docstatus") {
-			df.fieldtype = "Select",
-			df.options = [
-				{ value: 0, label: "Draft" },
-				{ value: 1, label: "Submitted" },
-				{ value: 2, label: "Cancelled" },
-			];
-		} else if (df.fieldtype == 'Check') {
-			df.fieldtype = 'Select';
-			df.options = [{ value: 0, label: 'No' },
-				{ value: 1, label: 'Yes' }
-			];
-		} else if (['Text', 'Small Text', 'Text Editor', 'Code', 'Tag', 'Comments',
-			'Dynamic Link', 'Read Only', 'Assign'
-		].indexOf(df.fieldtype) != -1) {
-			df.fieldtype = 'Data';
-		} else if (df.fieldtype == 'Link' && this.$w.find('.condition').val() != "=") {
-			df.fieldtype = 'Data';
-		}
-		if (df.fieldtype === "Data" && (df.options || "").toLowerCase() === "email") {
-			df.options = null;
-		}
+		this.sidebar.find(".list-stats-dropdown .stat-result").html(tag_list);
 	}
 
 	reload_stats() {
@@ -359,7 +242,39 @@ frappe.views.ListSidebar = class ListSidebar {
 		this.get_stats();
 	}
 
-	get_divider() {
-		return $('<li role="separator" class="divider"></li>');
+	add_insights_banner() {
+		try {
+			if (this.list_view.view != "Report") {
+				return;
+			}
+
+			if (localStorage.getItem("show_insights_banner") == "false") {
+				return;
+			}
+
+			if (this.insights_banner) {
+				this.insights_banner.remove();
+			}
+
+			const message = "Get more insights with";
+			const link = "https://frappe.io/s/insights";
+			const cta = "Frappe Insights";
+
+			this.insights_banner = $(`
+				<div style="position: relative;">
+					<div class="pr-3">
+						${message} <a href="${link}" target="_blank" style="color: var(--primary-color)">${cta} &rarr; </a>
+					</div>
+					<div style="position: absolute; top: -1px; right: -4px; cursor: pointer;" title="Dismiss"
+						onclick="localStorage.setItem('show_insights_banner', 'false') || this.parentElement.remove()">
+						<svg class="icon  icon-sm" style="">
+							<use class="" href="#icon-close"></use>
+						</svg>
+					</div>
+				</div>
+			`).appendTo(this.sidebar);
+		} catch (error) {
+			console.error(error);
+		}
 	}
 };

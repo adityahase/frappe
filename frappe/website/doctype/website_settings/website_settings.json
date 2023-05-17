@@ -11,23 +11,33 @@
  "document_type": "Other",
  "engine": "InnoDB",
  "field_order": [
+  "home_tab",
   "sb0",
   "home_page",
   "cb4",
   "title_prefix",
+  "misc_section",
+  "app_name",
+  "disable_signup",
+  "column_break_9",
+  "app_logo",
   "section_break_6",
   "website_theme",
   "website_theme_image",
   "website_theme_image_link",
+  "navbar_tab",
   "brand",
   "banner_image",
+  "splash_image",
   "brand_html",
   "set_banner_from_image",
   "favicon",
   "top_bar",
-  "navbar_search",
-  "hide_login",
   "top_bar_items",
+  "hide_login",
+  "navbar_search",
+  "show_language_picker",
+  "navbar_template_section",
   "navbar_template",
   "navbar_template_values",
   "edit_navbar_template_values",
@@ -35,16 +45,22 @@
   "call_to_action_url",
   "banner",
   "banner_html",
+  "footer_tab",
   "footer",
-  "footer_logo",
-  "copyright",
-  "address",
   "footer_items",
+  "footer_details_section",
+  "hide_footer_signup",
+  "copyright",
+  "footer_logo",
+  "column_break_37",
+  "address",
+  "footer_powered",
+  "custom_footer_section",
   "footer_template",
   "footer_template_values",
   "edit_footer_template_values",
-  "hide_footer_signup",
   "integrations",
+  "analytics_section",
   "enable_view_tracking",
   "enable_google_indexing",
   "authorize_api_indexing_access",
@@ -53,20 +69,15 @@
   "column_break_17",
   "google_analytics_id",
   "google_analytics_anonymize_ip",
-  "misc_section",
-  "subdomain",
-  "disable_signup",
+  "account_deletion_settings_section",
+  "auto_account_deletion",
+  "show_account_deletion_link",
   "section_break_38",
+  "subdomain",
   "head_html",
   "robots_txt",
-  "route_redirects",
-  "section_break_39",
-  "chat_enable",
-  "chat_enable_from",
-  "chat_enable_to",
-  "chat_room_name",
-  "chat_welcome_message",
-  "chat_operators"
+  "redirects_tab",
+  "route_redirects"
  ],
  "fields": [
   {
@@ -75,7 +86,7 @@
    "label": "Landing Page"
   },
   {
-   "description": "Link that is the website home page. Standard Links (index, login, products, blog, about, contact)",
+   "description": "Link that is the website home page. Standard Links (home, login, products, blog, about, contact)",
    "fieldname": "home_page",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -94,7 +105,8 @@
   },
   {
    "fieldname": "section_break_6",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Theme"
   },
   {
    "default": "Standard",
@@ -141,7 +153,6 @@
    "label": "Set Banner from Image"
   },
   {
-   "collapsible": 1,
    "fieldname": "top_bar",
    "fieldtype": "Section Break",
    "label": "Navbar"
@@ -160,6 +171,7 @@
   },
   {
    "collapsible": 1,
+   "collapsible_depends_on": "banner_html",
    "fieldname": "banner",
    "fieldtype": "Section Break",
    "label": "Banner"
@@ -172,10 +184,10 @@
    "options": "HTML"
   },
   {
-   "collapsible": 1,
+   "collapsible_depends_on": "footer_items",
    "fieldname": "footer",
    "fieldtype": "Section Break",
-   "label": "Footer"
+   "label": "Footer Items"
   },
   {
    "fieldname": "copyright",
@@ -185,8 +197,9 @@
   {
    "description": "Address and other legal information you may want to put in the footer.",
    "fieldname": "address",
-   "fieldtype": "Text Editor",
-   "label": "Address"
+   "fieldtype": "Small Text",
+   "label": "Address",
+   "max_height": "8rem"
   },
   {
    "fieldname": "footer_items",
@@ -203,7 +216,7 @@
   {
    "collapsible": 1,
    "fieldname": "integrations",
-   "fieldtype": "Section Break",
+   "fieldtype": "Tab Break",
    "label": "Integrations"
   },
   {
@@ -216,10 +229,9 @@
    "fieldtype": "Column Break"
   },
   {
-   "collapsible": 1,
    "fieldname": "misc_section",
    "fieldtype": "Section Break",
-   "label": "Disable Signup"
+   "label": "Login Page"
   },
   {
    "description": "An icon file with .ico extension. Should be 16 x 16 px. Generated using a favicon generator. [favicon-generator.org]",
@@ -230,12 +242,12 @@
   {
    "description": "Sub-domain provided by erpnext.com",
    "fieldname": "subdomain",
-   "fieldtype": "Text",
+   "fieldtype": "Small Text",
    "label": "Subdomain",
    "read_only": 1
   },
   {
-   "default": "0",
+   "default": "1",
    "description": "Disable Customer Signup link in Login page",
    "fieldname": "disable_signup",
    "fieldtype": "Check",
@@ -244,8 +256,8 @@
   {
    "collapsible": 1,
    "fieldname": "section_break_38",
-   "fieldtype": "Section Break",
-   "label": "HTML Header, Robots and Redirects"
+   "fieldtype": "Tab Break",
+   "label": "Header, Robots"
   },
   {
    "description": "Added HTML in the &lt;head&gt; section of the web page, primarily used for website verification and SEO",
@@ -260,51 +272,6 @@
    "label": "Robots.txt"
   },
   {
-   "collapsible": 1,
-   "fieldname": "section_break_39",
-   "fieldtype": "Section Break",
-   "label": "Chat"
-  },
-  {
-   "default": "0",
-   "fieldname": "chat_enable",
-   "fieldtype": "Check",
-   "label": "Enable Chat"
-  },
-  {
-   "depends_on": "chat_enable",
-   "fieldname": "chat_enable_from",
-   "fieldtype": "Time",
-   "label": "From"
-  },
-  {
-   "depends_on": "chat_enable",
-   "fieldname": "chat_enable_to",
-   "fieldtype": "Time",
-   "label": "To"
-  },
-  {
-   "default": "Support",
-   "depends_on": "chat_enable",
-   "fieldname": "chat_room_name",
-   "fieldtype": "Data",
-   "label": "Chat Room Name"
-  },
-  {
-   "default": "Hi, how may I help you?",
-   "depends_on": "chat_enable",
-   "fieldname": "chat_welcome_message",
-   "fieldtype": "Data",
-   "label": "Welcome Message"
-  },
-  {
-   "depends_on": "chat_enable",
-   "fieldname": "chat_operators",
-   "fieldtype": "Table",
-   "label": "Chat Operators",
-   "options": "Chat Room User"
-  },
-  {
    "fieldname": "route_redirects",
    "fieldtype": "Table",
    "label": "Route Redirects",
@@ -312,7 +279,7 @@
   },
   {
    "default": "0",
-   "description": "To use Google Indexing, enable <a href=\"#Form/Google Settings\">Google Settings</a>.",
+   "description": "To use Google Indexing, enable <a href=\"/app/google-settings\">Google Settings</a>.",
    "fieldname": "enable_google_indexing",
    "fieldtype": "Check",
    "label": "Enable Google Indexing"
@@ -407,6 +374,101 @@
    "fieldname": "google_analytics_anonymize_ip",
    "fieldtype": "Check",
    "label": "Google Analytics Anonymize IP"
+  },
+  {
+   "default": "0",
+   "fieldname": "show_language_picker",
+   "fieldtype": "Check",
+   "label": "Show Language Picker"
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "navbar_template",
+   "fieldname": "navbar_template_section",
+   "fieldtype": "Section Break",
+   "label": "Navbar Template"
+  },
+  {
+   "default": "Frappe",
+   "fieldname": "app_name",
+   "fieldtype": "Data",
+   "label": "App Name"
+  },
+  {
+   "fieldname": "app_logo",
+   "fieldtype": "Attach Image",
+   "label": "App Logo"
+  },
+  {
+   "fieldname": "account_deletion_settings_section",
+   "fieldtype": "Section Break",
+   "label": "Account Deletion Settings"
+  },
+  {
+   "default": "0",
+   "fieldname": "show_account_deletion_link",
+   "fieldtype": "Check",
+   "label": "Show Account Deletion Link in My Account Page"
+  },
+  {
+   "default": "72",
+   "fieldname": "auto_account_deletion",
+   "fieldtype": "Int",
+   "label": "Auto Account Deletion within (Hours)"
+  },
+  {
+   "fieldname": "footer_powered",
+   "fieldtype": "Small Text",
+   "label": "Footer \"Powered By\"",
+   "max_height": "2rem"
+  },
+  {
+   "fieldname": "splash_image",
+   "fieldtype": "Attach Image",
+   "label": "Splash Image"
+  },
+  {
+   "fieldname": "home_tab",
+   "fieldtype": "Tab Break",
+   "label": "Home"
+  },
+  {
+   "fieldname": "navbar_tab",
+   "fieldtype": "Tab Break",
+   "label": "Navbar"
+  },
+  {
+   "fieldname": "footer_tab",
+   "fieldtype": "Tab Break",
+   "label": "Footer"
+  },
+  {
+   "fieldname": "footer_details_section",
+   "fieldtype": "Section Break",
+   "label": "Footer Details"
+  },
+  {
+   "fieldname": "column_break_37",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custom_footer_section",
+   "fieldtype": "Section Break",
+   "label": "Custom Footer"
+  },
+  {
+   "fieldname": "redirects_tab",
+   "fieldtype": "Tab Break",
+   "label": "Redirects"
+  },
+  {
+   "fieldname": "column_break_9",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "analytics_section",
+   "fieldtype": "Section Break",
+   "label": "Analytics"
   }
  ],
  "icon": "fa fa-cog",
@@ -414,8 +476,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "max_attachments": 10,
- "modified": "2020-09-28 18:47:18.506700",
+ "modified": "2022-12-05 04:17:56.478757",
  "modified_by": "Administrator",
  "module": "Website",
  "name": "Website Settings",
@@ -438,5 +499,6 @@
  ],
  "sort_field": "modified",
  "sort_order": "ASC",
+ "states": [],
  "track_changes": 1
 }

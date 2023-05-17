@@ -5,6 +5,7 @@ import LinksWidget from "../widgets/links_widget";
 import OnboardingWidget from "../widgets/onboarding_widget";
 import NewWidget from "../widgets/new_widget";
 import NumberCardWidget from "../widgets/number_card_widget";
+import QuickListWidget from "../widgets/quick_list_widget";
 
 frappe.provide("frappe.widget");
 
@@ -15,6 +16,7 @@ frappe.widget.widget_factory = {
 	links: LinksWidget,
 	onboarding: OnboardingWidget,
 	number_card: NumberCardWidget,
+	quick_list: QuickListWidget,
 };
 
 frappe.widget.make_widget = (opts) => {
@@ -38,15 +40,19 @@ export default class WidgetGroup {
 
 	make() {
 		this.make_container();
-		this.title && this.set_title();
+		if (this.title) {
+			this.set_title();
+		} else {
+			this.title_area.remove();
+		}
 		this.widgets && this.make_widgets();
 	}
 
 	make_container() {
-		const widget_area = $(`<div class="widget-group">
+		const widget_area = $(`<div class="widget-group ${this.class_name || ""}">
 				<div class="widget-group-head">
-					<div class="widget-group-title h6 uppercase"></div>
-					<div class="widget-group-control h6 text-muted"></div>
+					<div class="widget-group-title"></div>
+					<div class="widget-group-control"></div>
 				</div>
 				<div class="widget-group-body grid-col-${this.columns}">
 				</div>
@@ -76,6 +82,7 @@ export default class WidgetGroup {
 			...widget,
 			widget_type: this.type,
 			container: this.body,
+			height: this.height || null,
 			options: {
 				...this.options,
 				on_delete: (name) => this.on_delete(name),
@@ -181,4 +188,50 @@ export default class WidgetGroup {
 	}
 }
 
+export class SingleWidgetGroup {
+	constructor(opts) {
+		Object.assign(this, opts);
+		this.widgets_list = [];
+		this.widgets_dict = {};
+		this.make();
+	}
+
+	make() {
+		this.add_widget(this.widgets);
+	}
+
+	add_widget(widget) {
+		let widget_object = frappe.widget.make_widget({
+			...widget,
+			widget_type: this.type,
+			container: this.container,
+			height: this.height || null,
+			options: {
+				...this.options,
+				on_delete: () => this.on_delete(),
+				on_edit: () => this.on_edit(widget_object),
+			},
+		});
+		this.widgets_list.push(widget_object);
+		this.widgets_dict[widget.name] = widget_object;
+
+		return widget_object;
+	}
+
+	on_delete() {
+		this.api.blocks.delete();
+	}
+
+	on_edit(widget_object) {
+		this.block.call("on_edit", widget_object);
+	}
+
+	customize() {
+		this.widgets_list.forEach((wid) => {
+			wid.customize(this.options);
+		});
+	}
+}
+
 frappe.widget.WidgetGroup = WidgetGroup;
+frappe.widget.SingleWidgetGroup = SingleWidgetGroup;
