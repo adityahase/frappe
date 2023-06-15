@@ -4,6 +4,8 @@
 import logging
 import os
 
+import sentry_sdk
+from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
 from werkzeug.exceptions import HTTPException, NotFound
 from werkzeug.local import LocalManager
 from werkzeug.middleware.profiler import ProfilerMiddleware
@@ -21,13 +23,10 @@ from frappe import _
 from frappe.auth import SAFE_HTTP_METHODS, UNSAFE_HTTP_METHODS, HTTPRequest
 from frappe.core.doctype.comment.comment import update_comments_in_parent_after_request
 from frappe.middlewares import StaticDataMiddleware
+from frappe.sentry import FrappeIntegration, before_send
 from frappe.utils import cint, get_site_name, sanitize_html
 from frappe.utils.error import make_error_snapshot
 from frappe.website.serve import get_response
-import sentry_sdk
-from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
-from frappe.sentry import FrappeIntegration
-
 
 local_manager = LocalManager(frappe.local)
 
@@ -365,7 +364,8 @@ sentry_sdk.init(
 	traces_sample_rate=1.0,
 	attach_stacktrace=True,
 	integrations=[FrappeIntegration()],
-	_experiments={'record_sql_params': True}
+	before_send=before_send,
+	_experiments={"record_sql_params": True},
 )
 
 

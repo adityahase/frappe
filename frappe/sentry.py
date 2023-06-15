@@ -1,13 +1,13 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and Contributors
 # License: MIT. See LICENSE
-import frappe
-
+from sentry_sdk import configure_scope
 from sentry_sdk.hub import Hub
 from sentry_sdk.integrations import Integration
 from sentry_sdk.tracing_utils import record_sql_queries
-from frappe.database.database import Database
 from sentry_sdk.utils import capture_internal_exceptions
-from sentry_sdk import configure_scope
+
+import frappe
+from frappe.database.database import Database
 
 
 class FrappeIntegration(Integration):
@@ -50,3 +50,9 @@ def set_sentry_context():
 		scope.transaction.name = path
 
 		scope.user = {"id": frappe.session.user, "email": frappe.session.user}
+
+
+def before_send(event, hint):
+	if event.get("logger", "") == "CSSUTILS":
+		return None
+	return event
