@@ -17,11 +17,11 @@ class UserPermission(Document):
 		self.validate_default_permission()
 
 	def on_update(self):
-		frappe.cache().hdel("user_permissions", self.user)
+		frappe.cache.hdel("user_permissions", self.user)
 		frappe.publish_realtime("update_user_permissions", user=self.user, after_commit=True)
 
 	def on_trash(self):
-		frappe.cache().hdel("user_permissions", self.user)
+		frappe.cache.hdel("user_permissions", self.user)
 		frappe.publish_realtime("update_user_permissions", user=self.user, after_commit=True)
 
 	def validate_user_permission(self):
@@ -60,6 +60,10 @@ class UserPermission(Document):
 			frappe.throw(_("{0} has already assigned default value for {1}.").format(ref_link, self.allow))
 
 
+def send_user_permissions(bootinfo):
+	bootinfo.user["user_permissions"] = get_user_permissions()
+
+
 @frappe.whitelist()
 def get_user_permissions(user=None):
 	"""Get all users permissions for the user as a dict of doctype"""
@@ -74,7 +78,7 @@ def get_user_permissions(user=None):
 	if not user or user in ("Administrator", "Guest"):
 		return {}
 
-	cached_user_permissions = frappe.cache().hget("user_permissions", user)
+	cached_user_permissions = frappe.cache.hget("user_permissions", user)
 
 	if cached_user_permissions is not None:
 		return cached_user_permissions
@@ -110,7 +114,7 @@ def get_user_permissions(user=None):
 					add_doc_to_perm(perm, doc, False)
 
 		out = frappe._dict(out)
-		frappe.cache().hset("user_permissions", user, out)
+		frappe.cache.hset("user_permissions", user, out)
 	except frappe.db.SQLError as e:
 		if frappe.db.is_table_missing(e):
 			# called from patch

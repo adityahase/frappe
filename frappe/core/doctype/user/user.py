@@ -1,7 +1,8 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: MIT. See LICENSE
+from collections.abc import Sequence
 from datetime import timedelta
-from typing import Optional, Sequence
+from typing import Optional
 
 import frappe
 import frappe.defaults
@@ -28,6 +29,7 @@ from frappe.utils import (
 	now_datetime,
 	today,
 )
+from frappe.utils.deprecations import deprecated
 from frappe.utils.password import check_password, get_password_reset_limit
 from frappe.utils.password import update_password as _update_password
 from frappe.utils.user import get_system_managers
@@ -60,8 +62,8 @@ class User(Document):
 
 	def after_insert(self):
 		create_notification_settings(self.name)
-		frappe.cache().delete_key("users_for_mentions")
-		frappe.cache().delete_key("enabled_users")
+		frappe.cache.delete_key("users_for_mentions")
+		frappe.cache.delete_key("enabled_users")
 
 	def validate(self):
 		# clear new password
@@ -75,6 +77,8 @@ class User(Document):
 			self.validate_email_type(self.email)
 			self.validate_email_type(self.name)
 		self.add_system_manager_role()
+		self.populate_role_profile_roles()
+		self.check_roles_added()
 		self.set_system_user()
 		self.set_full_name()
 		self.check_enable_disable()
@@ -84,7 +88,6 @@ class User(Document):
 		self.remove_disabled_roles()
 		self.validate_user_email_inbox()
 		ask_pass_update()
-		self.validate_roles()
 		self.validate_allowed_modules()
 		self.validate_user_image()
 		self.set_time_zone()
@@ -97,11 +100,15 @@ class User(Document):
 		):
 			self.set_social_login_userid("frappe", frappe.generate_hash(length=39))
 
-	def validate_roles(self):
+	def populate_role_profile_roles(self):
 		if self.role_profile_name:
 			role_profile = frappe.get_doc("Role Profile", self.role_profile_name)
 			self.set("roles", [])
 			self.append_roles(*[role.role for role in role_profile.roles])
+
+	@deprecated
+	def validate_roles(self):
+		self.populate_role_profile_roles()
 
 	def validate_allowed_modules(self):
 		if self.module_profile:
@@ -142,10 +149,10 @@ class User(Document):
 			frappe.defaults.set_default("time_zone", self.time_zone, self.name)
 
 		if self.has_value_changed("enabled"):
-			frappe.cache().delete_key("users_for_mentions")
-			frappe.cache().delete_key("enabled_users")
+			frappe.cache.delete_key("users_for_mentions")
+			frappe.cache.delete_key("enabled_users")
 		elif self.has_value_changed("allow_in_mentions") or self.has_value_changed("user_type"):
-			frappe.cache().delete_key("users_for_mentions")
+			frappe.cache.delete_key("users_for_mentions")
 
 	def has_website_permission(self, ptype, user, verbose=False):
 		"""Returns true if current user is the session user"""
@@ -282,6 +289,10 @@ class User(Document):
 				self.email_new_password(new_password)
 
 		except frappe.OutgoingEmailError:
+			frappe.clear_last_message()
+			frappe.msgprint(
+				_("Please setup default outgoing Email Account from Settings > Email Account"), alert=True
+			)
 			# email server not set, don't send email
 			self.log_error("Unable to send new password notification")
 
@@ -325,7 +336,16 @@ class User(Document):
 		return (self.first_name or "") + (self.first_name and " " or "") + (self.last_name or "")
 
 	def password_reset_mail(self, link):
-		self.send_login_mail(_("Password Reset"), "password_reset", {"link": link}, now=True)
+
+		reset_password_template = frappe.db.get_system_setting("reset_password_template")
+
+		self.send_login_mail(
+			_("Password Reset"),
+			"password_reset",
+			{"link": link},
+			now=True,
+			custom_template=reset_password_template,
+		)
 
 	def send_welcome_mail_to_user(self):
 		from frappe.utils import get_url
@@ -342,6 +362,8 @@ class User(Document):
 			else:
 				subject = _("Complete Registration")
 
+		welcome_email_template = frappe.db.get_system_setting("welcome_email_template")
+
 		self.send_login_mail(
 			subject,
 			"new_user",
@@ -349,9 +371,10 @@ class User(Document):
 				link=link,
 				site_url=get_url(),
 			),
+			custom_template=welcome_email_template,
 		)
 
-	def send_login_mail(self, subject, template, add_args, now=None):
+	def send_login_mail(self, subject, template, add_args, now=None, custom_template=None):
 		"""send mail with login details"""
 		from frappe.utils import get_url
 		from frappe.utils.user import get_user_fullname
@@ -374,11 +397,19 @@ class User(Document):
 			frappe.session.user not in STANDARD_USERS and get_formatted_email(frappe.session.user) or None
 		)
 
+		if custom_template:
+			from frappe.email.doctype.email_template.email_template import get_email_template
+
+			email_template = get_email_template(custom_template, args)
+			subject = email_template.get("subject")
+			content = email_template.get("message")
+
 		frappe.sendmail(
 			recipients=self.email,
 			sender=sender,
 			subject=subject,
-			template=template,
+			template=template if not custom_template else None,
+			content=content if custom_template else None,
 			args=args,
 			header=[subject, "green"],
 			delayed=(not now) if now is not None else self.flags.delay_emails,
@@ -437,9 +468,9 @@ class User(Document):
 		frappe.delete_doc("Notification Settings", self.name, ignore_permissions=True)
 
 		if self.get("allow_in_mentions"):
-			frappe.cache().delete_key("users_for_mentions")
+			frappe.cache.delete_key("users_for_mentions")
 
-		frappe.cache().delete_key("enabled_users")
+		frappe.cache.delete_key("enabled_users")
 
 		# delete user permissions
 		frappe.db.delete("User Permission", {"user": self.name})
@@ -649,6 +680,21 @@ class User(Document):
 		if not self.time_zone:
 			self.time_zone = get_system_timezone()
 
+	def check_roles_added(self):
+		if self.user_type != "System User" or self.roles or not self.is_new():
+			return
+
+		frappe.msgprint(
+			_("Newly created user {0} has no roles enabled.").format(frappe.bold(self.name)),
+			title=_("No Roles Specified"),
+			indicator="orange",
+			primary_action={
+				"label": _("Add Roles"),
+				"client_action": "frappe.set_route",
+				"args": ["Form", self.doctype, self.name],
+			},
+		)
+
 
 @frappe.whitelist()
 def get_timezones():
@@ -720,10 +766,10 @@ def update_password(
 	user_doc, redirect_url = reset_user_data(user)
 
 	# get redirect url from cache
-	redirect_to = frappe.cache().hget("redirect_after_login", user)
+	redirect_to = frappe.cache.hget("redirect_after_login", user)
 	if redirect_to:
 		redirect_url = redirect_to
-		frappe.cache().hdel("redirect_after_login", user)
+		frappe.cache.hdel("redirect_after_login", user)
 
 	frappe.local.login_manager.login_as(user)
 
@@ -881,7 +927,7 @@ def sign_up(email: str, full_name: str, redirect_to: str) -> tuple[int, str]:
 			user.add_roles(default_role)
 
 		if redirect_to:
-			frappe.cache().hset("redirect_after_login", user.name, redirect_to)
+			frappe.cache.hset("redirect_after_login", user.name, redirect_to)
 
 		if user.flags.email_sent:
 			return 1, _("Please check your email for verification")
@@ -1194,4 +1240,4 @@ def get_enabled_users():
 		enabled_users = frappe.get_all("User", filters={"enabled": "1"}, pluck="name")
 		return enabled_users
 
-	return frappe.cache().get_value("enabled_users", _get_enabled_users)
+	return frappe.cache.get_value("enabled_users", _get_enabled_users)

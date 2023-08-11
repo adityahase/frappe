@@ -459,6 +459,10 @@ class Email:
 		if content_type == "text/plain":
 			self.text_content += self.get_payload(part)
 
+			# attach txt file from received email as well aside from saving to text_content if it has filename
+			if part.get_filename():
+				self.get_attachment(part)
+
 		elif content_type == "text/html":
 			self.html_content += self.get_payload(part)
 
@@ -853,7 +857,7 @@ class InboundMail(Email):
 		"""Remove Prefixes like 'fw', FWD', 're' etc from subject."""
 		# Match strings like "fw:", "re	:" etc.
 		regex = r"(^\s*(fw|fwd|wg)[^:]*:|\s*(re|aw)[^:]*:\s*)*"
-		return frappe.as_unicode(strip(re.sub(regex, "", subject, 0, flags=re.IGNORECASE)))
+		return frappe.as_unicode(strip(re.sub(regex, "", subject, count=0, flags=re.IGNORECASE)))
 
 	@staticmethod
 	def get_email_fields(doctype):

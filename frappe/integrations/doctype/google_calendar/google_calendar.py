@@ -119,7 +119,7 @@ def authorize_access(g_calendar, reauthorize=None):
 	)
 
 	if not google_calendar.authorization_code or reauthorize:
-		frappe.cache().hset("google_calendar", "google_calendar", google_calendar.name)
+		frappe.cache.hset("google_calendar", "google_calendar", google_calendar.name)
 		return get_authentication_url(client_id=google_settings.client_id, redirect_uri=redirect_uri)
 	else:
 		try:
@@ -163,7 +163,7 @@ def google_callback(code=None):
 	"""
 	Authorization code is sent to callback as per the API configuration
 	"""
-	google_calendar = frappe.cache().hget("google_calendar", "google_calendar")
+	google_calendar = frappe.cache.hget("google_calendar", "google_calendar")
 	frappe.db.set_value("Google Calendar", google_calendar, "authorization_code", code)
 	frappe.db.commit()
 
@@ -481,7 +481,7 @@ def update_event_in_google_calendar(doc, method=None):
 		event["description"] = doc.description
 		event["recurrence"] = repeat_on_to_google_calendar_recurrence_rule(doc)
 		event["status"] = (
-			"cancelled" if doc.event_type == "Cancelled" or doc.status == "Closed" else event.get("status")
+			"cancelled" if doc.status == "Cancelled" or doc.status == "Closed" else event.get("status")
 		)
 		event.update(
 			format_date_according_to_google_calendar(

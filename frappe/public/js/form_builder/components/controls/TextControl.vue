@@ -5,7 +5,7 @@ import { useSlots, ref, computed, watch } from "vue";
 import { computedAsync } from "@vueuse/core";
 
 let store = useStore();
-let props = defineProps(["df", "value", "modelValue"]);
+const props = defineProps(["df", "value", "modelValue"]);
 let emit = defineEmits(["update:modelValue"]);
 let slots = useSlots();
 
@@ -33,12 +33,12 @@ let doctype_df = computed(() => {
 		}));
 
 	let options = [{ label: __("Select DocType"), value: "" }, ...doctypes.value];
-	return { fieldtype: "Select", label: __("Fetch Form"), options };
+	return { fieldtype: "Select", label: __("Fetch From"), options };
 });
 
 let field_df = computedAsync(async () => {
 	let options = [{ label: __("Select Field"), value: "" }];
-	let df = { fieldtype: "Select", label: __("Fetch Form"), options };
+	let df = { fieldtype: "Select", label: __("Fetch From"), options };
 	if (!doctype.value) return df;
 	let doctype_name = doctypes.value?.find(df => df.value == doctype.value).doctype_name;
 	if (!doctype_name) return df;

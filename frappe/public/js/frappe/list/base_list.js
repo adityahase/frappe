@@ -668,7 +668,6 @@ class FilterArea {
 		const fields_dict = this.list_view.page.fields_dict;
 
 		let out = filters.reduce((out, filter) => {
-			// eslint-disable-next-line
 			const [dt, fieldname, condition, value] = filter;
 			out.promise = out.promise || Promise.resolve();
 			out.non_standard_filters = out.non_standard_filters || [];
@@ -678,7 +677,9 @@ class FilterArea {
 			if (
 				fields_dict[fieldname] &&
 				(condition === "=" ||
-					(condition === "like" && fields_dict[fieldname]?.df?.fieldtype != "Link"))
+					(condition === "like" && fields_dict[fieldname]?.df?.fieldtype != "Link") ||
+					(condition === "descendants of (inclusive)" &&
+						fields_dict[fieldname]?.df?.fieldtype == "Link"))
 			) {
 				// standard filter
 				out.promise = out.promise.then(() => fields_dict[fieldname].set_value(value));
@@ -787,6 +788,13 @@ class FilterArea {
 							options.unshift("");
 							options = options.join("\n");
 						}
+					}
+					if (
+						df.fieldtype == "Link" &&
+						df.options &&
+						frappe.boot.treeviews.includes(df.options)
+					) {
+						condition = "descendants of (inclusive)";
 					}
 
 					return {

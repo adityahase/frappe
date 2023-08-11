@@ -345,3 +345,5 @@ function send_users(args, action) {
 		users: Array.from(new Set(users)),
 	});
 }
+
+require("./realtime");
