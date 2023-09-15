@@ -1,9 +1,11 @@
 import copy
 import datetime
+import os
 import signal
 import unittest
+from collections.abc import Sequence
 from contextlib import contextmanager
-from typing import Sequence
+from unittest.mock import patch
 
 import frappe
 from frappe.model.base_document import BaseDocument
@@ -32,7 +34,7 @@ class FrappeTestCase(unittest.TestCase):
 		# flush changes done so far to avoid flake
 		frappe.db.commit()
 		if cls.SHOW_TRANSACTION_COMMIT_WARNINGS:
-			frappe.db.add_before_commit(_commit_watcher)
+			frappe.db.before_commit.add(_commit_watcher)
 
 		# enqueue teardown actions (executed in LIFO order)
 		cls.addClassCleanup(_restore_thread_locals, copy.deepcopy(frappe.local.flags))
@@ -75,6 +77,12 @@ class FrappeTestCase(unittest.TestCase):
 		else:
 			self.assertEqual(expected, actual, msg=msg)
 
+	def normalize_html(self, code: str) -> str:
+		"""Formats HTML consistently so simple string comparisons can work on them."""
+		from bs4 import BeautifulSoup
+
+		return BeautifulSoup(code, "html.parser").prettify(formatter=None)
+
 	@contextmanager
 	def assertQueryCount(self, count):
 		queries = []
@@ -92,6 +100,61 @@ class FrappeTestCase(unittest.TestCase):
 		finally:
 			frappe.db.sql = orig_sql
 
+	@contextmanager
+	def assertRowsRead(self, count):
+		rows_read = 0
+
+		def _sql_with_count(*args, **kwargs):
+			nonlocal rows_read
+
+			ret = orig_sql(*args, **kwargs)
+			# count of last touched rows as per DB-API 2.0 https://peps.python.org/pep-0249/#rowcount
+			rows_read += cint(frappe.db._cursor.rowcount)
+			return ret
+
+		try:
+			orig_sql = frappe.db.sql
+			frappe.db.sql = _sql_with_count
+			yield
+			self.assertLessEqual(rows_read, count, msg="Queries read more rows than expected")
+		finally:
+			frappe.db.sql = orig_sql
+
+	@classmethod
+	def enable_safe_exec(cls) -> None:
+		"""Enable safe exec and disable them after test case is completed."""
+		from frappe.installer import update_site_config
+		from frappe.utils.safe_exec import SAFE_EXEC_CONFIG_KEY
+
+		cls._common_conf = os.path.join(frappe.local.sites_path, "common_site_config.json")
+		update_site_config(SAFE_EXEC_CONFIG_KEY, 1, validate=False, site_config_path=cls._common_conf)
+
+		cls.addClassCleanup(
+			lambda: update_site_config(
+				SAFE_EXEC_CONFIG_KEY, 0, validate=False, site_config_path=cls._common_conf
+			)
+		)
+
+	@contextmanager
+	def set_user(self, user: str):
+		old_user = frappe.session.user
+		frappe.set_user(user)
+		yield
+		frappe.set_user(old_user)
+
+
+class MockedRequestTestCase(FrappeTestCase):
+	def setUp(self):
+		import responses
+
+		self.responses = responses.RequestsMock()
+		self.responses.start()
+
+		self.addCleanup(self.responses.stop)
+		self.addCleanup(self.responses.reset)
+
+		return super().setUp()
+
 
 def _commit_watcher():
 	import traceback
@@ -101,8 +164,6 @@ def _commit_watcher():
 
 
 def _rollback_db():
-	frappe.local.before_commit = []
-	frappe.local.rollback_observers = []
 	frappe.db.value_cache = {}
 	frappe.db.rollback()
 
@@ -112,11 +173,13 @@ def _restore_thread_locals(flags):
 	frappe.local.error_log = []
 	frappe.local.message_log = []
 	frappe.local.debug_log = []
-	frappe.local.realtime_log = []
 	frappe.local.conf = frappe._dict(frappe.get_site_config())
 	frappe.local.cache = {}
 	frappe.local.lang = "en"
 	frappe.local.preload_assets = {"style": [], "script": []}
+
+	if hasattr(frappe.local, "request"):
+		delattr(frappe.local, "request")
 
 
 @contextmanager
@@ -177,3 +240,16 @@ def timeout(seconds=30, error_message="Test timed out."):
 		return wrapper
 
 	return decorator
+
+
+@contextmanager
+def patch_hooks(overridden_hoooks):
+	get_hooks = frappe.get_hooks
+
+	def patched_hooks(hook=None, default="_KEEP_DEFAULT_LIST", app_name=None):
+		if hook in overridden_hoooks:
+			return overridden_hoooks[hook]
+		return get_hooks(hook, default, app_name)
+
+	with patch.object(frappe, "get_hooks", patched_hooks):
+		yield

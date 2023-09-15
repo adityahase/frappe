@@ -84,7 +84,6 @@ frappe.search.utils = {
 				out.label = match[0].bold();
 				out.value = match[0];
 			} else {
-				// eslint-disable-next-line
 				console.log("Illegal match", match);
 			}
 			out.index = 80;
@@ -360,12 +359,13 @@ frappe.search.utils = {
 					var part = parts[i];
 					if (part.toLowerCase().indexOf(keywords) !== -1) {
 						// If the field contains the keyword
+						let colon_index, field_value;
 						if (part.indexOf(" &&& ") !== -1) {
-							var colon_index = part.indexOf(" &&& ");
-							var field_value = part.slice(colon_index + 5);
+							colon_index = part.indexOf(" &&& ");
+							field_value = part.slice(colon_index + 5);
 						} else {
-							var colon_index = part.indexOf(" : ");
-							var field_value = part.slice(colon_index + 3);
+							colon_index = part.indexOf(" : ");
+							field_value = part.slice(colon_index + 3);
 						}
 						if (field_value.length > field_length) {
 							// If field value exceeds field_length, find the keyword in it
@@ -624,6 +624,29 @@ frappe.search.utils = {
 			action: _function,
 			args: args,
 		});
+	},
+	get_marketplace_apps: function (keywords) {
+		var me = this;
+		var out = [];
+		frappe.boot.marketplace_apps.forEach(function (item) {
+			var level = me.fuzzy_search(keywords, item.title) * 0.8;
+			if (level > 0) {
+				var ret = {
+					label: __("Install {0} from Marketplace", [
+						me.bolden_match_part(__(item.title), keywords),
+					]),
+					value: __("Install {0} from Marketplace", [__(item.title)]),
+					index: level,
+					route: [
+						`https://frappecloud.com/${item.route}?utm_source=awesomebar`,
+						item.name,
+					],
+				};
+
+				out.push(ret);
+			}
+		});
+		return out;
 	},
 	searchable_functions: [],
 };

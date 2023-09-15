@@ -1,3 +1,4 @@
+import json
 import sys
 from contextlib import contextmanager
 from random import choice
@@ -6,13 +7,14 @@ from time import time
 from unittest.mock import patch
 
 import requests
+from filetype import guess_mime
 from semantic_version import Version
 from werkzeug.test import TestResponse
 
 import frappe
 from frappe.installer import update_site_config
-from frappe.tests.utils import FrappeTestCase
-from frappe.utils import get_site_url, get_test_client
+from frappe.tests.utils import FrappeTestCase, patch_hooks
+from frappe.utils import cint, get_site_url, get_test_client
 
 try:
 	_site = frappe.local.site
@@ -239,16 +241,6 @@ class TestMethodAPI(FrappeAPITestCase):
 			generate_keys("Administrator")
 			frappe.db.commit()
 
-	def test_version(self):
-		# test 1: test for /api/method/version
-		response = self.get(f"{self.METHOD_PATH}/version")
-		json = frappe._dict(response.json)
-
-		self.assertEqual(response.status_code, 200)
-		self.assertIsInstance(json, dict)
-		self.assertIsInstance(json.message, str)
-		self.assertEqual(Version(json.message), Version(frappe.__version__))
-
 	def test_ping(self):
 		# test 2: test for /api/method/ping
 		response = self.get(f"{self.METHOD_PATH}/ping")
@@ -312,18 +304,13 @@ class TestReadOnlyMode(FrappeAPITestCase):
 class TestWSGIApp(FrappeAPITestCase):
 	def test_request_hooks(self):
 		self.addCleanup(lambda: _test_REQ_HOOK.clear())
-		get_hooks = frappe.get_hooks
 
-		def patch_request_hooks(event: str, *args, **kwargs):
-			patched_hooks = {
+		with patch_hooks(
+			{
 				"before_request": ["frappe.tests.test_api.before_request"],
 				"after_request": ["frappe.tests.test_api.after_request"],
 			}
-			if event not in patched_hooks:
-				return get_hooks(event, *args, **kwargs)
-			return patched_hooks[event]
-
-		with patch("frappe.get_hooks", patch_request_hooks):
+		):
 			self.assertIsNone(_test_REQ_HOOK.get("before_request"))
 			self.assertIsNone(_test_REQ_HOOK.get("after_request"))
 			res = self.get("/api/method/ping")
@@ -340,3 +327,44 @@ def before_request(*args, **kwargs):
 
 def after_request(*args, **kwargs):
 	_test_REQ_HOOK["after_request"] = time()
+
+
+class TestResponse(FrappeAPITestCase):
+	def test_generate_pdf(self):
+		response = self.get(
+			f"/api/method/frappe.utils.print_format.download_pdf",
+			{"sid": self.sid, "doctype": "User", "name": "Guest"},
+		)
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response.headers["content-type"], "application/pdf")
+		self.assertGreater(cint(response.headers["content-length"]), 0)
+
+		self.assertEqual(guess_mime(response.data), "application/pdf")
+
+	def test_binary_and_csv_response(self):
+		def download_template(file_type):
+			filters = json.dumps({})
+			fields = json.dumps({"User": ["name"]})
+			return self.post(
+				"/api/method/frappe.core.doctype.data_import.data_import.download_template",
+				{
+					"sid": self.sid,
+					"doctype": "User",
+					"export_fields": fields,
+					"export_filters": filters,
+					"file_type": file_type,
+				},
+			)
+
+		response = download_template("Excel")
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response.headers["content-type"], "application/octet-stream")
+		self.assertGreater(cint(response.headers["content-length"]), 0)
+		self.assertEqual(
+			guess_mime(response.data), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+		)
+
+		response = download_template("CSV")
+		self.assertEqual(response.status_code, 200)
+		self.assertIn("text/csv", response.headers["content-type"])
+		self.assertGreater(cint(response.headers["content-length"]), 0)

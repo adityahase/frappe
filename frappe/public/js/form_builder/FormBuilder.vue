@@ -3,7 +3,7 @@ import Sidebar from "./components/Sidebar.vue"
 import Tabs from "./components/Tabs.vue";
 import { computed, onMounted, watch, ref } from "vue";
 import { useStore } from "./store";
-import { onClickOutside, useMagicKeys, whenever } from "@vueuse/core";
+import { onClickOutside } from "@vueuse/core";
 
 let store = useStore();
 
@@ -14,43 +14,6 @@ let should_render = computed(() => {
 let container = ref(null);
 onClickOutside(container, () => store.form.selected_field = null);
 
-// cmd/ctrl + s to save the form
-const { meta_s, ctrl_s } = useMagicKeys();
-whenever(() => meta_s.value || ctrl_s.value, () => {
-	if (store.dirty) {
-		store.save_changes();
-	}
-});
-
-function setup_change_doctype_dialog() {
-	store.page.$title_area.on("click", () => {
-		let dialog = new frappe.ui.Dialog({
-			title: __("Change DocType"),
-			fields: [
-				{
-					label: __("Select DocType"),
-					fieldname: "doctype",
-					fieldtype: "Link",
-					options: "DocType",
-					default: store.doctype || null
-				},
-				{
-					label: __("Customize"),
-					fieldname: "customize",
-					fieldtype: "Check",
-					default: store.is_customize_form
-				}
-			],
-			primary_action_label: __("Change"),
-			primary_action({ doctype }) {
-				dialog.hide();
-				let customize = dialog.get_value("customize") ? "customize" : "";
-				frappe.set_route("form-builder", doctype, customize);
-			}
-		});
-		dialog.show();
-	});
-}
 
 watch(
 	() => store.form.layout,
@@ -58,10 +21,7 @@ watch(
 	{ deep: true }
 );
 
-onMounted(() => {
-	store.fetch();
-	setup_change_doctype_dialog();
-});
+onMounted(() => store.fetch());
 </script>
 
 <template>
@@ -86,9 +46,8 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .form-builder-container {
-	margin-bottom: -60px;
+	margin: -12px -20px -5px;
 	display: flex;
-	gap: 20px;
 
 	&.resizing {
 		user-select: none;
@@ -103,12 +62,20 @@ onMounted(() => {
 		flex: 1;
 	}
 
-	.form-sidebar,
+	.form-sidebar {
+		border-right: 1px solid var(--border-color);
+		border-bottom-left-radius: var(--border-radius);
+	}
+
 	.form-main {
 		border-radius: var(--border-radius);
 		box-shadow: var(--card-shadow);
 		background-color: var(--card-bg);
+		margin: 10px;
+	}
 
+	.form-sidebar,
+	.form-main {
 		:deep(.section-columns.has-one-column .field) {
 			input.form-control, .signature-field {
 				width: calc(50% - 19px);
@@ -190,8 +157,7 @@ onMounted(() => {
 			}
 		}
 
-		:deep([data-has-std-field="false"]),
-		:deep([data-is-custom="1"]) {
+		:deep([data-is-user-generated="1"]) {
 			background-color: var(--yellow-highlight-color);
 		}
 	}
@@ -199,7 +165,7 @@ onMounted(() => {
 	:deep(.preview) {
 		--field-placeholder-color: var(--fg-bg-color);
 
-		.tab, .column, .field, [data-is-custom="1"] {
+		.tab, .column, .field {
 			background-color: var(--fg-color);
 		}
 
