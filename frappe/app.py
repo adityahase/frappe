@@ -27,7 +27,6 @@ from frappe.auth import SAFE_HTTP_METHODS, UNSAFE_HTTP_METHODS, HTTPRequest
 from frappe.middlewares import StaticDataMiddleware
 from frappe.sentry import FrappeIntegration, before_send
 from frappe.utils import cint, get_site_name, sanitize_html
-from frappe.utils.error import make_error_snapshot
 from frappe.utils import CallbackManager, cint, get_site_name, sanitize_html
 from frappe.utils.data import escape_html
 from frappe.utils.error import log_error_snapshot
