@@ -3,7 +3,6 @@
 no_cache = 1
 
 import json
-import os
 import re
 
 import frappe
@@ -60,7 +59,6 @@ def get_context(context):
 			"csrf_token": csrf_token,
 			"google_analytics_id": frappe.conf.get("google_analytics_id"),
 			"google_analytics_anonymize_ip": frappe.conf.get("google_analytics_anonymize_ip"),
-			"mixpanel_id": frappe.conf.get("mixpanel_id"),
 			"app_name": (
 				frappe.get_website_settings("app_name") or frappe.get_system_settings("app_name") or "Frappe"
 			),
