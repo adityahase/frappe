@@ -424,6 +424,7 @@ before_request = [
 # Background Job Hooks
 before_job = [
 	"frappe.monitor.start",
+	"frappe.sentry.set_sentry_context",
 ]
 after_job = [
 	"frappe.monitor.stop",

@@ -277,6 +277,20 @@ def start_worker(
 	if quiet:
 		logging_level = "WARNING"
 
+	import sentry_sdk
+	from sentry_sdk.integrations.rq import RqIntegration
+
+	from frappe.sentry import FrappeIntegration, before_send
+
+	sentry_sdk.init(
+		send_default_pii=True,
+		traces_sample_rate=1.0,
+		attach_stacktrace=True,
+		integrations=[RqIntegration(), FrappeIntegration()],
+		before_send=before_send,
+		_experiments={"record_sql_params": True},
+	)
+
 	worker = Worker(queues, name=get_worker_name(queue_name), connection=redis_connection)
 	worker.work(
 		logging_level=logging_level,

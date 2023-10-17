@@ -1,5 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and Contributors
 # License: MIT. See LICENSE
+from datetime import datetime
+
+import rq
 from sentry_sdk import configure_scope
 from sentry_sdk.hub import Hub
 from sentry_sdk.integrations import Integration
@@ -43,11 +46,26 @@ class FrappeIntegration(Integration):
 
 def set_sentry_context():
 	with configure_scope() as scope:
-		if frappe.form_dict.cmd:
-			path = f"/api/method/{frappe.form_dict.cmd}"
+		if job := rq.get_current_job():
+			kwargs = job._kwargs
+			transaction_name = kwargs["method"]
+			context = frappe._dict({"scheduled": False, "wait": 0})
+			if "run_scheduled_job" in transaction_name:
+				transaction_name = kwargs.get("kwargs", {}).get("job_type", "")
+				context.scheduled = True
+
+			waitdiff = datetime.utcnow() - job.enqueued_at
+			context.uuid = job.id
+			context.wait = waitdiff.total_seconds()
+
+			scope.set_extra("job", context)
 		else:
-			path = frappe.request.path
-		scope.transaction.name = path
+			if frappe.form_dict.cmd:
+				transaction_name = f"/api/method/{frappe.form_dict.cmd}"
+			else:
+				transaction_name = frappe.request.path
+
+		scope.transaction.name = transaction_name
 
 		scope.user = {"id": frappe.session.user, "email": frappe.session.user}
 
