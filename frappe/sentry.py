@@ -48,7 +48,7 @@ def set_sentry_context():
 	with configure_scope() as scope:
 		if job := rq.get_current_job():
 			kwargs = job._kwargs
-			transaction_name = kwargs["method"]
+			transaction_name = str(kwargs["method"])
 			context = frappe._dict({"scheduled": False, "wait": 0})
 			if "run_scheduled_job" in transaction_name:
 				transaction_name = kwargs.get("kwargs", {}).get("job_type", "")
