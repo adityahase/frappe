@@ -10,7 +10,7 @@ from sentry_sdk.tracing_utils import record_sql_queries
 from sentry_sdk.utils import capture_internal_exceptions
 
 import frappe
-from frappe.database.database import Database
+from frappe.database.database import Database, EmptyQueryValues
 
 
 class FrappeIntegration(Integration):
@@ -30,7 +30,7 @@ class FrappeIntegration(Integration):
 			with record_sql_queries(
 				hub, self._cursor, query, values, paramstyle="pyformat", executemany=False
 			):
-				return real_sql(self, query, values, *args, **kwargs)
+				return real_sql(self, query, values or EmptyQueryValues, *args, **kwargs)
 
 		def connect(self):
 			hub = Hub.current
