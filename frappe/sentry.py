@@ -30,7 +30,7 @@ class FrappeIntegration(Integration):
 			with record_sql_queries(
 				hub, self._cursor, query, values, paramstyle="pyformat", executemany=False
 			):
-				return real_sql(self, query, values or (), *args, **kwargs)
+				return real_sql(self, query, values, *args, **kwargs)
 
 		def connect(self):
 			hub = Hub.current
